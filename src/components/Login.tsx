@@ -12,7 +12,6 @@ const Login: React.FC = () => {
   const location = useLocation()
   const { signIn } = useAuth()
 
-  // If redirected here, location.state?.from contains previous location
   const from = (location.state as any)?.from?.pathname || '/'
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,35 +37,55 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-page">
-      <form className="login-card" onSubmit={handleSubmit}>
-        <h2>Sign in</h2>
+      <div className="login-card glass-card animate-fade">
+        <header className="login-header">
+          <h2>Welcome Back</h2>
+          <span className="login-subtitle">Sign in to manage your clients</span>
+        </header>
 
-        {error && <div className="login-error">{error}</div>}
+        {error && (
+          <div className="login-error">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            {error}
+          </div>
+        )}
 
-        <label className="login-label">
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-          />
-        </label>
+        <form onSubmit={handleSubmit} className="login-form-group">
+          <label className="login-label">
+            Email Address
+            <div className="login-input-wrapper">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="advisor@calibre.com"
+                required
+              />
+            </div>
+          </label>
 
-        <label className="login-label">
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-          />
-        </label>
+          <label className="login-label">
+            Password
+            <div className="login-input-wrapper">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+          </label>
 
-        <button type="submit" className="login-submit" disabled={loading}>{loading ? 'Signing in…' : 'Sign in'}</button>
-      </form>
+          <button type="submit" className="login-submit" disabled={loading}>
+            {loading ? 'Authenticating...' : 'Sign In'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

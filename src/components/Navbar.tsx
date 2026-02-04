@@ -31,23 +31,38 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="navbar-right">
-                <div className="nav-actions">
-                    {!user ? (
-                        <Link to="/login" className="login-link">Login</Link>
+                <div className="profile-container">
+                    <div className="advisor-profile">
+                        <div className="advisor-info">
+                            <span className="advisor-name">Marcus Tan</span>
+                            <span className="advisor-role">Premier Advisor</span>
+                        </div>
+                        <div className="advisor-avatar">MT</div>
+                    </div>
+
+                    {user ? (
+                        <div className="profile-dropdown glass-card">
+                            <div className="dropdown-header">
+                                <span className="user-email">{user.email}</span>
+                                <span className="user-status">Logged in</span>
+                            </div>
+                            <div className="dropdown-divider"></div>
+                            <button className="logout-button" onClick={() => signOut()}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                Sign Out
+                            </button>
+                        </div>
                     ) : (
-                        <div className="signed-in">
-                            <span className="signed-in-email">{user.email}</span>
-                            <button className="login-link" onClick={() => signOut()}>Logout</button>
+                        <div className="profile-dropdown glass-card">
+                            <Link to="/login" className="login-button">
+                                Sign In
+                            </Link>
                         </div>
                     )}
-                </div>
-
-                <div className="advisor-profile">
-                    <div className="advisor-info">
-                        <span className="advisor-name">Marcus Tan</span>
-                        <span className="advisor-role">Premier Advisor</span>
-                    </div>
-                    <div className="advisor-avatar">MT</div>
                 </div>
             </div>
         </nav>
