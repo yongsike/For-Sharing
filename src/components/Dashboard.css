@@ -355,41 +355,141 @@
 .risk-indicator {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
-.risk-track {
-    height: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    position: relative;
-    overflow: visible;
+.ai-analysis-content {
+    margin-top: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--primary);
 }
 
-.risk-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
-    border-radius: 10px;
-    opacity: 0.6;
+.analysis-text {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-main);
+    white-space: pre-wrap;
 }
 
-.risk-marker {
-    width: 4px;
-    height: 24px;
-    background: white;
-    position: absolute;
-    top: -6px;
-    border-radius: 2px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    z-index: 2;
-}
-
-.risk-labels {
+.loading-shimmer {
     display: flex;
-    justify-content: space-between;
-    font-size: 0.7rem;
-    color: var(--text-muted);
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.loading-shimmer .line {
+    height: 14px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.loading-shimmer .line.short {
+    width: 60%;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.analysis-section {
+    margin-bottom: 1.5rem;
+}
+
+.analysis-section h4 {
+    color: var(--primary);
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
     text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+}
+
+.analysis-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.analysis-section li {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    padding-left: 1.4rem;
+    position: relative;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.analysis-section li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.analysis-section.red-flags h4 {
+    color: var(--warning);
+}
+
+.analysis-section.red-flags li::before {
+    color: var(--warning);
+}
+
+.analysis-section.recommendations p {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.6;
+    color: #fff;
+    padding: 0.75rem;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.risk-header-info {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.risk-category-display,
+.risk-date-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.risk-category-display .label,
+.risk-date-display .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.risk-category-display .value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: var(--font-heading);
+}
+
+.risk-date-display .value {
+    font-size: 1rem;
+    color: var(--text-main);
+    font-weight: 500;
 }
 
 .risk-description {

@@ -104,21 +104,10 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({ onBack, showBack }) => {
                     <h1>{client.full_name}</h1>
                     <div className="meta-pills">
                         <span className="pill">ID: {client.client_id}</span>
-                        <span className="pill risk-pill">{client.risk_profile} Profile</span>
                     </div>
                 </div>
             </div>
             <div className="header-stats">
-                <div className="stat-group">
-                    <span className="label">Risk Assessment Date</span>
-                    <span className="value timestamp">
-                        {new Date(client.risk_assessment_date).toLocaleDateString('en-SG', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                        })}
-                    </span>
-                </div>
                 <div className="stat-group align-end">
                     <span className="label">Status</span>
                     <span className="value success">Active Client</span>
