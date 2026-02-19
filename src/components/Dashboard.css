@@ -761,6 +761,25 @@
     background: #111827;
 }
 
+/* Native Date Picker Theme Overrides */
+.filter-input::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.5);
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.filter-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+input[type="date"]::-webkit-datetime-edit-year-field:focus,
+input[type="date"]::-webkit-datetime-edit-month-field:focus,
+input[type="date"]::-webkit-datetime-edit-day-field:focus {
+    background-color: var(--primary);
+    color: #fff;
+    border-radius: 2px;
+}
+
 .clear-filters {
     background: none;
     border: none;

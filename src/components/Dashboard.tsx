@@ -424,6 +424,42 @@ const PlansHeld: React.FC<{ client?: any; mode?: 'overview' | 'focused' }> = ({ 
         return 'Active';
     };
 
+    const startMonthOptions = React.useMemo(() => {
+        const months = new Set<string>();
+        rawPlans.forEach((plan: any) => {
+            if (plan.start_date) {
+                const date = new Date(plan.start_date);
+                months.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`);
+            }
+        });
+        const sorted = Array.from(months).sort();
+        return [
+            { label: 'All', value: '' },
+            ...sorted.map(m => ({
+                label: new Date(m).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' }),
+                value: m
+            }))
+        ];
+    }, [rawPlans]);
+
+    const endMonthOptions = React.useMemo(() => {
+        const months = new Set<string>();
+        rawPlans.forEach((plan: any) => {
+            if (plan.end_date) {
+                const date = new Date(plan.end_date);
+                months.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`);
+            }
+        });
+        const sorted = Array.from(months).sort();
+        return [
+            { label: 'All', value: '' },
+            ...sorted.map(m => ({
+                label: new Date(m).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' }),
+                value: m
+            }))
+        ];
+    }, [rawPlans]);
+
     const filteredPlans = React.useMemo(() => {
         return rawPlans.filter((plan: any) => {
             // Asset Class Filter
@@ -433,23 +469,30 @@ const PlansHeld: React.FC<{ client?: any; mode?: 'overview' | 'focused' }> = ({ 
             const status = getStatus(plan.start_date, plan.end_date);
             if (statusFilter !== 'All' && status !== statusFilter) return false;
 
-            // Time Period Filter (Overlap or contains?)
-            // Usually, "filter by time period" means plans that were active/started in this range.
-            // Let's filter such that plan.start_date is within [startDateFilter, endDateFilter]
+            // Start Month Filter (Exact month match)
             if (startDateFilter) {
-                const fStart = new Date(startDateFilter);
-                if (new Date(plan.start_date) < fStart) return false;
+                const pDate = new Date(plan.start_date);
+                const fDate = new Date(startDateFilter);
+                if (pDate.getFullYear() !== fDate.getFullYear() || pDate.getMonth() !== fDate.getMonth()) {
+                    return false;
+                }
             }
+
+            // End Month Filter (Exact month match)
             if (endDateFilter) {
-                // For end date filter, we compare against the start of the next month to be inclusive
-                const fEnd = new Date(endDateFilter);
-                fEnd.setMonth(fEnd.getMonth() + 1);
-                if (new Date(plan.start_date) >= fEnd) return false;
+                if (!plan.end_date) return false;
+                const pDate = new Date(plan.end_date);
+                const fDate = new Date(endDateFilter);
+                if (pDate.getFullYear() !== fDate.getFullYear() || pDate.getMonth() !== fDate.getMonth()) {
+                    return false;
+                }
             }
 
             return true;
         });
     }, [rawPlans, assetFilter, statusFilter, startDateFilter, endDateFilter]);
+
+
 
     const clearFilters = () => {
         setAssetFilter('All');
@@ -472,7 +515,7 @@ const PlansHeld: React.FC<{ client?: any; mode?: 'overview' | 'focused' }> = ({ 
                         value={assetFilter}
                         onChange={setAssetFilter}
                         options={[
-                            { label: 'All Assets', value: 'All' },
+                            { label: 'All', value: 'All' },
                             { label: 'Equity', value: 'Equity' },
                             { label: 'Fixed Income', value: 'Fixed Income' },
                             { label: 'Cash', value: 'Cash' }
@@ -480,36 +523,30 @@ const PlansHeld: React.FC<{ client?: any; mode?: 'overview' | 'focused' }> = ({ 
                     />
 
                     <CustomSelect
+                        label="Start Month"
+                        value={startDateFilter}
+                        onChange={setStartDateFilter}
+                        options={startMonthOptions}
+                    />
+
+                    <CustomSelect
+                        label="End Month"
+                        value={endDateFilter}
+                        onChange={setEndDateFilter}
+                        options={endMonthOptions}
+                    />
+                    
+                    <CustomSelect
                         label="Status"
                         value={statusFilter}
                         onChange={setStatusFilter}
                         options={[
-                            { label: 'All Statuses', value: 'All' },
+                            { label: 'All', value: 'All' },
                             { label: 'Active', value: 'Active' },
                             { label: 'Pending', value: 'Pending' },
                             { label: 'Ended', value: 'Ended' }
                         ]}
                     />
-
-                    <div className="filter-group">
-                        <label>Start Month</label>
-                        <input
-                            type="month"
-                            className="filter-input"
-                            value={startDateFilter}
-                            onChange={(e) => setStartDateFilter(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="filter-group">
-                        <label>End Month</label>
-                        <input
-                            type="month"
-                            className="filter-input"
-                            value={endDateFilter}
-                            onChange={(e) => setEndDateFilter(e.target.value)}
-                        />
-                    </div>
 
                     {(assetFilter !== 'All' || statusFilter !== 'All' || startDateFilter || endDateFilter) && (
                         <button className="clear-filters" onClick={clearFilters}>
