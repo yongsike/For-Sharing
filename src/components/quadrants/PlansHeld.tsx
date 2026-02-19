@@ -23,14 +23,14 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
         if (active && payload && payload.length) {
             return (
                 <div style={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    backgroundColor: '#fff',
                     padding: '10px 14px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '4px',
+                    boxShadow: 'var(--shadow-lg)',
                 }}>
-                    <p style={{ color: '#fff', fontWeight: 600, marginBottom: 4 }}>{payload[0].payload.fullDate}</p>
-                    <p style={{ color: '#3b82f6', fontSize: '0.9rem' }}>
+                    <p style={{ color: 'var(--secondary)', fontWeight: 600, marginBottom: 4 }}>{payload[0].payload.fullDate}</p>
+                    <p style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>
                         Value: <span style={{ fontWeight: 600 }}>${payload[0].value.toLocaleString()}</span>
                     </p>
                 </div>
@@ -52,10 +52,10 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
                     {valuationData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={valuationData} margin={{ top: 10, right: 30, left: 10, bottom: 40 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                                 <XAxis
                                     dataKey="date"
-                                    stroke="rgba(255,255,255,0.5)"
+                                    stroke="var(--text-muted)"
                                     tick={<CustomizedXAxisTick />}
                                     interval={0}
                                     height={50}
@@ -63,8 +63,8 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
                                     axisLine={false}
                                 />
                                 <YAxis
-                                    stroke="rgba(255,255,255,0.5)"
-                                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+                                    stroke="var(--text-muted)"
+                                    tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
                                     tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                                     tickLine={false}
                                     axisLine={false}
@@ -74,9 +74,9 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
                                     type="monotone"
                                     dataKey="value"
                                     name="Market Value"
-                                    stroke="#3b82f6"
+                                    stroke="var(--primary)"
                                     strokeWidth={3}
-                                    dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+                                    dot={{ r: 4, fill: 'var(--primary)', strokeWidth: 0 }}
                                     activeDot={{ r: 6 }}
                                 />
                             </LineChart>
@@ -271,7 +271,6 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview' }) => {
         <section className="glass-card quadrant">
             <div className="card-header">
                 <h3>Plans Held</h3>
-                <span className="badge accent">Summary</span>
             </div>
 
             {mode === 'focused' && (

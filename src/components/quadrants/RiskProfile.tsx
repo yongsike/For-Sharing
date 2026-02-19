@@ -134,9 +134,6 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview' }) 
         <section className="glass-card quadrant">
             <div className="card-header">
                 <h3>Risk Profile</h3>
-                <span className={`badge ${loading ? 'animate-pulse' : 'warning'}`}>
-                    {loading ? 'AI Thinking...' : 'AI Insights'}
-                </span>
             </div>
 
             <div className="risk-indicator">

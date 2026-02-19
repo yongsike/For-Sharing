@@ -24,9 +24,9 @@
 }
 
 .back-button {
-    background: rgba(255, 255, 255, 0.05);
+    background: #fff;
     border: 1px solid var(--border);
-    color: var(--text-main);
+    color: var(--secondary);
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -48,15 +48,15 @@
 .client-avatar {
     width: 64px;
     height: 64px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: var(--bg-main);
+    border: 2px solid var(--primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
     font-weight: 700;
-    color: white;
-    box-shadow: 0 0 20px var(--primary-glow);
+    color: var(--primary);
 }
 
 .client-details h1 {
@@ -71,19 +71,19 @@
 }
 
 .pill {
-    background: rgba(255, 255, 255, 0.05);
+    background: #fff;
     padding: 0.25rem 0.75rem;
-    border-radius: 20px;
+    border-radius: 4px;
     font-size: 0.85rem;
     color: var(--text-muted);
     border: 1px solid var(--border);
 }
 
 .pill.risk-pill {
-    background: rgba(34, 211, 238, 0.1);
-    color: var(--accent);
-    border-color: rgba(34, 211, 238, 0.2);
-    font-weight: 500;
+    background: var(--primary-glow);
+    color: var(--primary);
+    border-color: var(--primary);
+    font-weight: 600;
 }
 
 .header-stats {
@@ -229,7 +229,7 @@
 .donut-center {
     width: 100px;
     height: 100px;
-    background: #111827;
+    background: #fff;
     border-radius: 50%;
     display: flex;
     flex-direction: column;
@@ -366,8 +366,9 @@
 .ai-analysis-content {
     margin-top: 0.5rem;
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: #fff;
     border-radius: var(--radius-md);
+    border: 1px solid var(--border);
     border-left: 3px solid var(--primary);
 }
 
@@ -431,7 +432,7 @@
     margin-bottom: 0.75rem;
     padding-left: 1.4rem;
     position: relative;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-main);
 }
 
 .analysis-section li::before {
@@ -454,10 +455,11 @@
     font-size: 1rem;
     font-weight: 500;
     line-height: 1.6;
-    color: #fff;
-    padding: 0.75rem;
-    background: rgba(99, 102, 241, 0.1);
+    color: var(--secondary);
+    padding: 1rem;
+    background: var(--primary-glow);
     border-radius: var(--radius-sm);
+    border: 1px solid var(--primary);
 }
 
 .risk-header-info {
@@ -568,10 +570,10 @@
 .modal-content {
     width: 90%;
     max-width: 800px;
-    background: rgba(17, 24, 39, 0.95);
+    background: #fff;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
     padding: 2.5rem;
     position: relative;
     max-height: 90vh;
@@ -614,7 +616,7 @@
 }
 
 .plans-table.interactive tbody tr:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 @keyframes fadeIn {
@@ -632,11 +634,12 @@
     gap: 1.5rem;
     margin-bottom: 1.5rem;
     padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.02);
+    background: #fff;
     border-radius: var(--radius-md);
     flex-wrap: wrap;
     align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
 }
 
 .filter-group {
@@ -660,9 +663,9 @@
 }
 
 .custom-select-trigger {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
     padding: 0.6rem 1rem;
     color: var(--text-main);
     font-size: 0.85rem;
@@ -675,8 +678,9 @@
 
 .custom-select-trigger:hover,
 .custom-select-trigger.open {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: #fff;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
 }
 
 .custom-select-trigger .chevron {
@@ -699,11 +703,10 @@
     padding: 0.5rem;
     max-height: 250px;
     overflow-y: auto;
-    background: #111827;
-    /* Solid background to make it opaque */
-    backdrop-filter: none;
-    /* Remove blur to ensure full opacity */
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #fff;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    border-radius: 4px;
     animation: dropdownFadeIn 0.2s ease;
 }
 
@@ -717,12 +720,12 @@
 }
 
 .custom-select-option:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.03);
     color: var(--text-main);
 }
 
 .custom-select-option.selected {
-    background: rgba(99, 102, 241, 0.15);
+    background: var(--primary-glow);
     color: var(--primary);
     font-weight: 600;
 }
@@ -740,9 +743,9 @@
 }
 
 .filter-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
     padding: 0.6rem 1rem;
     color: var(--text-main);
     font-size: 0.85rem;
@@ -753,18 +756,19 @@
 
 .filter-input:focus {
     border-color: var(--primary);
-    background: rgba(17, 24, 39, 0.8);
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    background: #fff;
+    box-shadow: var(--shadow-md);
 }
 
 .filter-input option {
-    background: #111827;
+    background: #fff;
 }
 
 /* Native Date Picker Theme Overrides */
 .filter-input::-webkit-calendar-picker-indicator {
-    filter: invert(1) opacity(0.5);
+    filter: none;
     cursor: pointer;
+    opacity: 0.6;
     transition: opacity 0.2s;
 }
 
@@ -776,7 +780,7 @@ input[type="date"]::-webkit-datetime-edit-year-field:focus,
 input[type="date"]::-webkit-datetime-edit-month-field:focus,
 input[type="date"]::-webkit-datetime-edit-day-field:focus {
     background-color: var(--primary);
-    color: #fff;
+    color: var(--secondary);
     border-radius: 2px;
 }
 

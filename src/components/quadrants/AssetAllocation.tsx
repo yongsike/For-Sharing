@@ -3,16 +3,16 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { CustomizedXAxisTick } from '../ChartUtils';
 
 const ALLOCATION_COLORS: Record<string, string> = {
-    'Equity': '#6366f1',
-    'Fixed Income': '#10b981',
-    'Cash': '#f59e0b',
-    'Bonds': '#3b82f6',
-    'Real Estate': '#ec4899',
-    'Commodities': '#f97316',
-    'Alternatives': '#8b5cf6',
+    'Equity': 'var(--primary)',
+    'Fixed Income': 'var(--warning)',
+    'Cash': 'var(--success)',
+    'Bonds': 'var(--warning)',
+    'Real Estate': '#BC6C25', // Specialized color
+    'Commodities': 'var(--danger)',
+    'Alternatives': '#606C38', // Specialized color
 };
 
-const FALLBACK_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#ec4899', '#f97316', '#8b5cf6'];
+const FALLBACK_COLORS = ['#C5B358', '#D4A373', '#719266', '#BC6C25', '#9B2226', '#606C38'];
 
 interface AssetAllocationProps {
     client?: any;
@@ -72,20 +72,20 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
             const total = payload.reduce((s: number, e: any) => s + (e.value || 0), 0);
             return (
                 <div style={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    backgroundColor: '#fff',
                     padding: '10px 14px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '4px',
+                    boxShadow: 'var(--shadow-lg)',
                     minWidth: 160,
                 }}>
-                    <p style={{ color: '#fff', fontWeight: 700, marginBottom: 6 }}>{label}</p>
+                    <p style={{ color: 'var(--secondary)', fontWeight: 700, marginBottom: 6 }}>{label}</p>
                     {payload.map((entry: any, i: number) => entry.value > 0 && (
                         <p key={i} style={{ color: entry.fill, fontSize: '0.85rem', margin: '3px 0' }}>
                             {entry.name}: <span style={{ fontWeight: 600 }}>${entry.value.toLocaleString()}</span>
                         </p>
                     ))}
-                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginTop: 6, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 6 }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 6, borderTop: '1px solid var(--border)', paddingTop: 6 }}>
                         Total: ${total.toLocaleString()}
                     </p>
                 </div>
@@ -98,16 +98,15 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
         <section className="glass-card quadrant">
             <div className="card-header">
                 <h3>Asset Allocation</h3>
-                <span className={`badge ${hasData ? 'success' : ''}`}>{hasData ? 'Monthly' : 'No Data'}</span>
             </div>
             <div className="chart-container" style={{ width: '100%', height: '250px', marginTop: '10px' }}>
                 {hasData ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={history} margin={{ top: 5, right: 20, bottom: 35, left: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis
                                 dataKey="date"
-                                stroke="rgba(255,255,255,0.5)"
+                                stroke="var(--text-muted)"
                                 tick={<CustomizedXAxisTick />}
                                 tickLine={false}
                                 axisLine={false}
@@ -115,8 +114,8 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
                                 height={50}
                             />
                             <YAxis
-                                stroke="rgba(255,255,255,0.5)"
-                                tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+                                stroke="var(--text-muted)"
+                                tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
                                 tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                                 tickLine={false}
                                 axisLine={false}

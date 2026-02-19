@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/AuthProvider'
 import { supabase } from '../lib/supabaseClient'
+import logo from '../assets/calibre logo.png'
 import './Navbar.css'
 
 interface SearchResult {
@@ -69,8 +70,7 @@ const Navbar: React.FC = () => {
         <nav className="navbar glass">
             <div className="navbar-left">
                 <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-                    <span className="logo-icon">▲</span>
-                    <span className="logo-text">Calibre</span>
+                    <img src={logo} alt="Company Logo" className="navbar-logo" />
                 </div>
             </div>
 

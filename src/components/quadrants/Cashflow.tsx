@@ -32,13 +32,13 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="custom-tooltip" style={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    backgroundColor: '#fff',
                     padding: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+                    border: '1px solid var(--border)',
+                    borderRadius: '4px',
+                    boxShadow: 'var(--shadow-lg)'
                 }}>
-                    <p className="tooltip-date" style={{ color: '#fff', marginBottom: '8px', fontWeight: 600 }}>{payload[0].payload.fullDate}</p>
+                    <p className="tooltip-date" style={{ color: 'var(--secondary)', marginBottom: '8px', fontWeight: 600 }}>{payload[0].payload.fullDate}</p>
                     {payload.map((entry: any, index: number) => (
                         <p key={index} style={{ color: entry.color, fontSize: '0.9rem', margin: '4px 0' }}>
                             {entry.name}: <span style={{ fontWeight: 600 }}>${entry.value.toLocaleString()}</span>
@@ -54,16 +54,15 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
         <section className="glass-card quadrant">
             <div className="card-header">
                 <h3>Cashflow</h3>
-                <span className={`badge ${hasData ? 'success' : ''}`}>{hasData ? 'Active' : 'No Data'}</span>
             </div>
             <div className="chart-container" style={{ width: '100%', height: '250px', marginTop: '10px' }}>
                 {hasData ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 35, left: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis
                                 dataKey="date"
-                                stroke="rgba(255,255,255,0.5)"
+                                stroke="var(--text-muted)"
                                 /* use shared custom tick to force all labels and rotate */
                                 tick={<CustomizedXAxisTick />}
                                 interval={0}
@@ -72,8 +71,8 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
                                 axisLine={false}
                             />
                             <YAxis
-                                stroke="rgba(255,255,255,0.5)"
-                                tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+                                stroke="var(--text-muted)"
+                                tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
                                 tickFormatter={(value) => `$${value >= 1000 ? `${value / 1000}k` : value}`}
                                 tickLine={false}
                                 axisLine={false}
@@ -84,27 +83,27 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
                                 type="monotone"
                                 dataKey="inflow"
                                 name="Inflow"
-                                stroke="#10b981"
+                                stroke="var(--success)"
                                 strokeWidth={2}
-                                dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
+                                dot={{ r: 4, fill: 'var(--success)', strokeWidth: 0 }}
                                 activeDot={{ r: 6 }}
                             />
                             <Line
                                 type="monotone"
                                 dataKey="outflow"
                                 name="Outflow"
-                                stroke="#ef4444"
+                                stroke="var(--danger)"
                                 strokeWidth={2}
-                                dot={{ r: 4, fill: '#ef4444', strokeWidth: 0 }}
+                                dot={{ r: 4, fill: 'var(--danger)', strokeWidth: 0 }}
                                 activeDot={{ r: 6 }}
                             />
                             <Line
                                 type="monotone"
                                 dataKey="net"
                                 name="Net Surplus"
-                                stroke="#3b82f6"
+                                stroke="var(--primary)"
                                 strokeWidth={2}
-                                dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+                                dot={{ r: 4, fill: 'var(--primary)', strokeWidth: 0 }}
                                 activeDot={{ r: 6 }}
                             />
                         </LineChart>
