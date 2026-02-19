@@ -7,66 +7,39 @@ export interface RiskAnalysisParams {
   plansHeld: string;
 }
 
-export async function* generateRiskAnalysis({
-  riskProfileCategory,
-  investmentAllocation,
-  cashflow,
-  plansHeld,
-}: RiskAnalysisParams) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const modelName = 'gemini-3-flash-preview';
 
+const SYSTEM_INSTRUCTION_BASE = `Role: You are a Financial Planning Consultant and Investment Analyst.
+
+Objective: Synthesize data to determine if the client's current financial reality matches their stated risk appetite.
+
+Data Inputs for Synthesis:
+- Risk Profile Category: [e.g. Conservative, Balanced, Aggressive]
+- Investment Allocation: [e.g. 60% Equities, 20% Fixed Income, 20% Cash]
+- Cashflow: [e.g. Inflow, Outflow, Net]
+- Plans Held: [e.g. Tax-advantaged accounts, Pensions, Insurance policies]
+
+Analysis Requirements and Logic:
+- Allocation Alignment: Does the current Asset Allocation match the volatility expected of their Risk Profile?
+- Capacity vs. Tolerance: Does the client’s Cashflow provide the capacity to take the risk their Risk Profile suggests?
+- Structural Analysis: Review Plans Held. Are there illiquid assets or locked-in plans that conflict with the client's need for flexibility?
+- The "Gap": Identify the specific delta between where they are and where their profile says they should be.
+
+Output:`;
+
+async function* baseGenerateStream(params: RiskAnalysisParams, schema: any, outputInstruction: string) {
   if (!apiKey) {
     throw new Error('VITE_GEMINI_API_KEY is not defined in environment variables.');
   }
 
   const ai = new GoogleGenAI({ apiKey });
-
-  const model = 'gemini-3-flash-preview';
-
   const config = {
-    thinkingConfig: {
-      thinkingLevel: ThinkingLevel.LOW,
-    },
+    thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
     responseMimeType: 'application/json',
-    responseSchema: {
-      type: Type.OBJECT,
-      required: ["Key Insights", "Potential Risks", "Recommendations"],
-      properties: {
-        "Key Insights": {
-          type: Type.STRING,
-        },
-        "Potential Risks": {
-          type: Type.STRING,
-        },
-        "Recommendations": {
-          type: Type.STRING,
-        },
-      },
-    },
+    responseSchema: schema,
     systemInstruction: [
-      {
-        text: `Role: You are a Financial Planning Consultant and Investment Analyst.
-
-Objective: Synthesize data to determine if the client's current financial reality matches their stated risk appetite.
-
-Data Inputs for Synthesis:
-- Risk Profile Category: [e.g. Conservative, Balanced, Aggressive]
-- Investment Allocation: [e.g. 60% Equities, 20% Fixed Income, 20% Cash]
-- Cashflow: [e.g. Inflow, Outflow, Net]
-- Plans Held: [e.g. Tax-advantaged accounts, Pensions, Insurance policies]
-
-Analysis Requirements and Logic:
-- Allocation Alignment: Does the current Asset Allocation match the volatility expected of their Risk Profile?
-- Capacity vs. Tolerance: Does the client’s Cashflow provide the capacity to take the risk their Risk Profile suggests?
-- Structural Analysis: Review Plans Held. Are there illiquid assets or locked-in plans that conflict with the client's need for flexibility?
-- The "Gap": Identify the specific delta between where they are and where their profile says they should be.
-
-Output:
-- Key Insights: Bulleted insights based on synthesized data.
-- Potential Risks: Any immediate dangers.
-- Recommendations: Clear actions for the advisor to take.
-- Ensure response is as concise as possible.`,
-      }
+      { text: `${SYSTEM_INSTRUCTION_BASE}\n${outputInstruction}\n- Ensure response is as concise as possible.` }
     ],
   };
 
@@ -75,10 +48,10 @@ Output:
       role: 'user',
       parts: [
         {
-          text: `Risk Profile Category: ${riskProfileCategory}
-- Investment Allocation: ${investmentAllocation}
-- Cashflow: ${cashflow}
-- Plans Held: ${plansHeld}`,
+          text: `Risk Profile Category: ${params.riskProfileCategory}
+- Investment Allocation: ${params.investmentAllocation}
+- Cashflow: ${params.cashflow}
+- Plans Held: ${params.plansHeld}`,
         },
       ],
     },
@@ -86,99 +59,46 @@ Output:
 
   try {
     const response = await ai.models.generateContentStream({
-      model,
+      model: modelName,
       config,
       contents,
     });
 
     for await (const chunk of response) {
-      const text = chunk.text;
-      if (text) yield text;
+      if (chunk.text) yield chunk.text;
     }
   } catch (error) {
-    console.error('Error generating risk analysis:', error);
+    console.error('Error in AI generation:', error);
     throw error;
   }
 }
 
-export async function* generateRiskSummary({
-  riskProfileCategory,
-  investmentAllocation,
-  cashflow,
-  plansHeld,
-}: RiskAnalysisParams) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) throw new Error('VITE_GEMINI_API_KEY not defined');
-
-  const ai = new GoogleGenAI({ apiKey });
-  const model = 'gemini-3-flash-preview';
-
-  const config = {
-    thinkingConfig: {
-      thinkingLevel: ThinkingLevel.LOW,
+export async function* generateRiskAnalysis(params: RiskAnalysisParams) {
+  const schema = {
+    type: Type.OBJECT,
+    required: ["Key Insights", "Potential Risks", "Recommendations"],
+    properties: {
+      "Key Insights": { type: Type.STRING },
+      "Potential Risks": { type: Type.STRING },
+      "Recommendations": { type: Type.STRING },
     },
-    responseMimeType: 'application/json',
-    responseSchema: {
-      type: Type.OBJECT,
-      required: ["Executive Summary"],
-      properties: {
-        "Executive Summary": {
-          type: Type.STRING,
-        },
-      },
-    },
-    systemInstruction: [
-      {
-        text: `Role: You are a Financial Planning Consultant and Investment Analyst.
-
-Objective: Synthesize data to determine if the client's current financial reality matches their stated risk appetite.
-
-Data Inputs for Synthesis:
-- Risk Profile Category: [e.g. Conservative, Balanced, Aggressive]
-- Investment Allocation: [e.g. 60% Equities, 20% Fixed Income, 20% Cash]
-- Cashflow: [e.g. Inflow, Outflow, Net]
-- Plans Held: [e.g. Tax-advantaged accounts, Pensions, Insurance policies]
-
-Analysis Requirements and Logic:
-- Allocation Alignment: Does the current Asset Allocation match the volatility expected of their Risk Profile?
-- Capacity vs. Tolerance: Does the client’s Cashflow provide the capacity to take the risk their Risk Profile suggests?
-- Structural Analysis: Review Plans Held. Are there illiquid assets or locked-in plans that conflict with the client's need for flexibility?
-- The "Gap": Identify the specific delta between where they are and where their profile says they should be.
-
-Output:
-- Executive Summary: A 2-sentence executive summary of the client's risk alignment
-- Ensure response is as concise as possible.`,
-      }
-    ],
   };
+  const instruction = `- Key Insights: Bulleted insights based on synthesized data.
+- Potential Risks: Any immediate dangers.
+- Recommendations: Clear actions for the advisor to take.`;
 
-  const contents = [
-    {
-      role: 'user',
-      parts: [
-        {
-          text: `Risk Profile Category: ${riskProfileCategory}
-- Investment Allocation: ${investmentAllocation}
-- Cashflow: ${cashflow}
-- Plans Held: ${plansHeld}`,
-        },
-      ],
+  yield* baseGenerateStream(params, schema, instruction);
+}
+
+export async function* generateRiskSummary(params: RiskAnalysisParams) {
+  const schema = {
+    type: Type.OBJECT,
+    required: ["Executive Summary"],
+    properties: {
+      "Executive Summary": { type: Type.STRING },
     },
-  ];
+  };
+  const instruction = `- Executive Summary: A 2-sentence executive summary of the client's risk alignment`;
 
-  try {
-    const response = await ai.models.generateContentStream({
-      model,
-      config,
-      contents,
-    });
-
-    for await (const chunk of response) {
-      const text = chunk.text;
-      if (text) yield text;
-    }
-  } catch (error) {
-    console.error('Error generating risk summary:', error);
-    throw error;
-  }
+  yield* baseGenerateStream(params, schema, instruction);
 }

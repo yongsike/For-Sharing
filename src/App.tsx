@@ -25,18 +25,13 @@ function AppContent() {
             }
           />
           <Route
-            path="/:clientId"
+            path="/:clientId/*"
             element={
               <RequireAuth>
                 <Dashboard />
               </RequireAuth>
             }
           />
-          {/* Quadrant Focused Routes */}
-          <Route path="/:clientId/asset-allocation" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/:clientId/cashflow" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/:clientId/plans" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/:clientId/risk" element={<RequireAuth><Dashboard /></RequireAuth>} />
         </Routes>
       </main>
     </div>

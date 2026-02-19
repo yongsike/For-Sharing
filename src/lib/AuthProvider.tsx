@@ -20,6 +20,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Helper to enrich user with profile data (admin flag)
+  const fetchUserProfile = async (u: User): Promise<User> => {
+    try {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('admin')
+        .eq('email', u.email ?? '')
+        .maybeSingle()
+
+      if (profile) {
+        return { ...u, admin: profile.admin }
+      }
+    } catch (e) {
+      console.warn('Profile fetch error', e)
+    }
+    return u
+  }
+
   // initialize from supabase session if present
   useEffect(() => {
     let mounted = true
@@ -35,22 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const session = data.session
         if (session?.user && mounted) {
           const u: User = { id: session.user.id, email: session.user.email ?? null }
-          // fetch admin flag from profiles/users table (if exists)
-          try {
-            const { data: profile } = await supabase
-              .from('users')
-              .select('admin')
-              .eq('email', session.user.email ?? '')
-              .maybeSingle()
-
-            if (profile && mounted) {
-              u.admin = profile.admin
-            }
-          } catch (e) {
-            // ignore
-          }
-
-          setUser(u)
+          const enrichedUser = await fetchUserProfile(u)
+          if (mounted) setUser(enrichedUser)
         }
       } catch (err) {
         console.error('init auth', err)
@@ -64,22 +68,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         const u: User = { id: session.user.id, email: session.user.email ?? null }
-        // fetch admin flag
-        ;(async () => {
-          try {
-            const { data: profile } = await supabase
-              .from('users')
-              .select('admin')
-              .eq('email', session.user.email ?? '')
-              .maybeSingle()
-
-            if (profile) u.admin = profile.admin
-          } catch (e) {
-            // ignore
-          } finally {
-            setUser(u)
-          }
-        })()
+        fetchUserProfile(u).then(enriched => {
+          if (mounted) setUser(enriched)
+        })
       } else {
         setUser(null)
       }
@@ -105,22 +96,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sUser = data.user
       if (!sUser) return { success: false, message: 'No user returned' }
 
-  const u: User = { id: sUser.id, email: sUser.email ?? null }
+      const u: User = { id: sUser.id, email: sUser.email ?? null }
+      const enrichedUser = await fetchUserProfile(u)
 
-      // fetch admin flag from users/profiles table
-      try {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('admin')
-          .eq('email', sUser.email)
-          .maybeSingle()
-
-        if (profile) u.admin = profile.admin
-      } catch (e) {
-        // ignore profile fetch errors
-      }
-
-      setUser(u)
+      setUser(enrichedUser)
       return { success: true }
     } catch (err) {
       console.error(err)
