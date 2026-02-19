@@ -32,7 +32,7 @@ const Navbar: React.FC = () => {
     // Debounced search
     useEffect(() => {
         const timer = setTimeout(async () => {
-            if (searchQuery.trim().length > 1) {
+            if (searchQuery.trim().length > 0) {
                 setIsSearching(true)
                 try {
                     const { data, error } = await supabase
@@ -86,7 +86,7 @@ const Navbar: React.FC = () => {
                         className="search-input"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={() => searchQuery.trim().length > 1 && setShowResults(true)}
+                        onFocus={() => searchQuery.trim().length > 0 && setShowResults(true)}
                     />
                     {isSearching && <div className="search-spinner"></div>}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { generateRiskAnalysis, generateRiskSummary } from '../lib/riskProfileAI';
@@ -62,7 +62,7 @@ const AssetAllocation: React.FC<{ client?: any }> = ({ client }) => {
         return null;
     };
 
-    
+
 
     return (
         <section className="glass-card quadrant">
@@ -75,20 +75,20 @@ const AssetAllocation: React.FC<{ client?: any }> = ({ client }) => {
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={history} margin={{ top: 5, right: 20, bottom: 35, left: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-                                                        <XAxis
-                                                                dataKey="date"
-                                                                stroke="rgba(255,255,255,0.5)"
-                                                                /*
-                                                                    Force Recharts to render every tick (interval=0).
-                                                                    Give extra height so rotated labels don't get clipped,
-                                                                    and rotate labels slightly for readability.
-                                                                */
-                                                                tick={<CustomizedXAxisTick />}
-                                                                tickLine={false}
-                                                                axisLine={false}
-                                                                interval={0}
-                                                                height={50}
-                                                        />
+                            <XAxis
+                                dataKey="date"
+                                stroke="rgba(255,255,255,0.5)"
+                                /*
+                                    Force Recharts to render every tick (interval=0).
+                                    Give extra height so rotated labels don't get clipped,
+                                    and rotate labels slightly for readability.
+                                */
+                                tick={<CustomizedXAxisTick />}
+                                tickLine={false}
+                                axisLine={false}
+                                interval={0}
+                                height={50}
+                            />
                             <YAxis
                                 stroke="rgba(255,255,255,0.5)"
                                 tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
@@ -257,11 +257,206 @@ const CashflowAnalysis: React.FC<{ client?: any }> = ({ client }) => {
     );
 };
 
-const PlansHeld: React.FC<{ client?: any }> = ({ client }) => {
+const PlanDetailModal: React.FC<{ plan: any; onClose: () => void }> = ({ plan, onClose }) => {
+    const valuationData = React.useMemo(() => {
+        if (!plan?.monthly_valuations) return [];
+        return [...plan.monthly_valuations]
+            .sort((a: any, b: any) => new Date(a.as_of_date).getTime() - new Date(b.as_of_date).getTime())
+            .map((v: any) => ({
+                date: new Date(v.as_of_date).toLocaleDateString('en-SG', { month: 'short', year: '2-digit' }),
+                fullDate: new Date(v.as_of_date).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' }),
+                value: parseFloat(v.market_value)
+            }));
+    }, [plan]);
+
+    const CustomTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div style={{
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    padding: '10px 14px',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                }}>
+                    <p style={{ color: '#fff', fontWeight: 600, marginBottom: 4 }}>{payload[0].payload.fullDate}</p>
+                    <p style={{ color: '#3b82f6', fontSize: '0.9rem' }}>
+                        Value: <span style={{ fontWeight: 600 }}>${payload[0].value.toLocaleString()}</span>
+                    </p>
+                </div>
+            );
+        }
+        return null;
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="modal-close" onClick={onClose}>&times;</button>
+                <div className="modal-header">
+                    <h2>{plan.plan_name}</h2>
+                    <div className="modal-id">Plan ID: {plan.plan_id}</div>
+                </div>
+
+                <div className="chart-container" style={{ width: '100%', height: '350px', marginTop: '20px' }}>
+                    {valuationData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={valuationData} margin={{ top: 10, right: 30, left: 10, bottom: 40 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="rgba(255,255,255,0.5)"
+                                    tick={<CustomizedXAxisTick />}
+                                    interval={0}
+                                    height={50}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="rgba(255,255,255,0.5)"
+                                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+                                    tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Line
+                                    type="monotone"
+                                    dataKey="value"
+                                    name="Market Value"
+                                    stroke="#3b82f6"
+                                    strokeWidth={3}
+                                    dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+                                    activeDot={{ r: 6 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="error-text" style={{ textAlign: 'center', padding: '2rem' }}>
+                            No valuation history available for this plan.
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CustomSelect: React.FC<{
+    label: string;
+    value: string;
+    options: { label: string; value: string }[];
+    onChange: (val: string) => void;
+}> = ({ label, value, options, onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const selectedOption = options.find(o => o.value === value);
+
+    return (
+        <div className="filter-group" ref={dropdownRef}>
+            <label>{label}</label>
+            <div className="custom-select-wrapper">
+                <div
+                    className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
+                    onClick={() => setIsOpen(!isOpen)}
+                >
+                    <span>{selectedOption?.label || value}</span>
+                    <svg className="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                {isOpen && (
+                    <div className="custom-select-options glass-card">
+                        {options.map(opt => (
+                            <div
+                                key={opt.value}
+                                className={`custom-select-option ${value === opt.value ? 'selected' : ''}`}
+                                onClick={() => {
+                                    onChange(opt.value);
+                                    setIsOpen(false);
+                                }}
+                            >
+                                {opt.label}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const PlansHeld: React.FC<{ client?: any; mode?: 'overview' | 'focused' }> = ({ client, mode = 'overview' }) => {
     const rawPlans = client?.raw_plans || [];
-    const plans = rawPlans.length > 0
-        ? rawPlans.map((p: any) => ({ type: p.plan_name, status: 'Active', renewalDate: p.asset_class }))
-        : [];
+    const [selectedPlan, setSelectedPlan] = useState<any>(null);
+
+    // Filter states
+    const [assetFilter, setAssetFilter] = useState<string>('All');
+    const [statusFilter, setStatusFilter] = useState<string>('All');
+    const [startDateFilter, setStartDateFilter] = useState<string>('');
+    const [endDateFilter, setEndDateFilter] = useState<string>('');
+
+    const formatDate = (dateStr: string | null) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('en-SG', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
+    const getStatus = (startDate: string, endDate: string | null) => {
+        const today = new Date();
+        const start = new Date(startDate);
+        if (today < start) return 'Pending';
+        if (endDate && today > new Date(endDate)) return 'Ended';
+        return 'Active';
+    };
+
+    const filteredPlans = React.useMemo(() => {
+        return rawPlans.filter((plan: any) => {
+            // Asset Class Filter
+            if (assetFilter !== 'All' && plan.asset_class !== assetFilter) return false;
+
+            // Status Filter
+            const status = getStatus(plan.start_date, plan.end_date);
+            if (statusFilter !== 'All' && status !== statusFilter) return false;
+
+            // Time Period Filter (Overlap or contains?)
+            // Usually, "filter by time period" means plans that were active/started in this range.
+            // Let's filter such that plan.start_date is within [startDateFilter, endDateFilter]
+            if (startDateFilter) {
+                const fStart = new Date(startDateFilter);
+                if (new Date(plan.start_date) < fStart) return false;
+            }
+            if (endDateFilter) {
+                // For end date filter, we compare against the start of the next month to be inclusive
+                const fEnd = new Date(endDateFilter);
+                fEnd.setMonth(fEnd.getMonth() + 1);
+                if (new Date(plan.start_date) >= fEnd) return false;
+            }
+
+            return true;
+        });
+    }, [rawPlans, assetFilter, statusFilter, startDateFilter, endDateFilter]);
+
+    const clearFilters = () => {
+        setAssetFilter('All');
+        setStatusFilter('All');
+        setStartDateFilter('');
+        setEndDateFilter('');
+    };
 
     return (
         <section className="glass-card quadrant">
@@ -269,30 +464,109 @@ const PlansHeld: React.FC<{ client?: any }> = ({ client }) => {
                 <h3>Plans Held</h3>
                 <span className="badge accent">Summary</span>
             </div>
+
+            {mode === 'focused' && (
+                <div className="filter-bar animate-fade">
+                    <CustomSelect
+                        label="Asset Class"
+                        value={assetFilter}
+                        onChange={setAssetFilter}
+                        options={[
+                            { label: 'All Assets', value: 'All' },
+                            { label: 'Equity', value: 'Equity' },
+                            { label: 'Fixed Income', value: 'Fixed Income' },
+                            { label: 'Cash', value: 'Cash' }
+                        ]}
+                    />
+
+                    <CustomSelect
+                        label="Status"
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        options={[
+                            { label: 'All Statuses', value: 'All' },
+                            { label: 'Active', value: 'Active' },
+                            { label: 'Pending', value: 'Pending' },
+                            { label: 'Ended', value: 'Ended' }
+                        ]}
+                    />
+
+                    <div className="filter-group">
+                        <label>Start Month</label>
+                        <input
+                            type="month"
+                            className="filter-input"
+                            value={startDateFilter}
+                            onChange={(e) => setStartDateFilter(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="filter-group">
+                        <label>End Month</label>
+                        <input
+                            type="month"
+                            className="filter-input"
+                            value={endDateFilter}
+                            onChange={(e) => setEndDateFilter(e.target.value)}
+                        />
+                    </div>
+
+                    {(assetFilter !== 'All' || statusFilter !== 'All' || startDateFilter || endDateFilter) && (
+                        <button className="clear-filters" onClick={clearFilters}>
+                            Clear Filters
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className="plans-table-container">
-                <table className="plans-table">
+                <table className={`plans-table ${mode === 'focused' ? 'interactive' : ''}`}>
                     <thead>
                         <tr>
-                            <th>Plan Type</th>
+                            <th>Plan Name</th>
+                            <th>Asset Class</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
                             <th>Status</th>
-                            <th>Renewal Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {plans.map((plan: any, index: number) => (
-                            <tr key={index}>
-                                <td>{plan.type}</td>
-                                <td>
-                                    <span className={`status-pill ${plan.status.toLowerCase().replace(' ', '-')}`}>
-                                        {plan.status}
-                                    </span>
-                                </td>
-                                <td>{plan.renewalDate}</td>
-                            </tr>
-                        ))}
+                        {filteredPlans.map((plan: any, index: number) => {
+                            const status = getStatus(plan.start_date, plan.end_date);
+                            return (
+                                <tr key={index} onClick={(e) => {
+                                    if (mode !== 'focused') return;
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setSelectedPlan(plan);
+                                }}>
+                                    <td>{plan.plan_name}</td>
+                                    <td>{plan.asset_class}</td>
+                                    <td>{formatDate(plan.start_date)}</td>
+                                    <td>{formatDate(plan.end_date)}</td>
+                                    <td>
+                                        <span className={`status-pill ${status.toLowerCase()}`}>
+                                            {status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
+                {filteredPlans.length === 0 && (
+                    <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        No plans found matching your filters.
+                    </p>
+                )}
             </div>
+
+            {selectedPlan && (
+                <PlanDetailModal
+                    plan={selectedPlan}
+                    onClose={() => setSelectedPlan(null)}
+                />
+            )}
         </section>
     );
 };
@@ -474,7 +748,7 @@ const Dashboard: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [client, setClient] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!!clientId);
 
     useEffect(() => {
         const fetchClientData = async () => {
@@ -487,8 +761,10 @@ const Dashboard: React.FC = () => {
                     .select(`
                         *,
                         client_plans (
+                            plan_id,
                             plan_name,
                             asset_class,
+                            start_date,
                             end_date,
                             monthly_valuations (
                                 market_value,
@@ -610,36 +886,6 @@ const Dashboard: React.FC = () => {
     const quadrantId = location.pathname.split('/').pop();
     const isFocused = quadrantId !== "" && quadrantId !== clientId && quadrantId !== undefined;
 
-    if (loading) return <div className="loading-container glass-card">Loading client data...</div>;
-    if (!client && !loading) return <div className="error-text">Client not found.</div>;
-
-    const renderFullGrid = () => (
-        <main className="dashboard-grid">
-            <Link to={`/${clientId}/asset-allocation`} className="quadrant-link">
-                <AssetAllocation client={client} />
-            </Link>
-            <Link to={`/${clientId}/cashflow`} className="quadrant-link">
-                <CashflowAnalysis client={client} />
-            </Link>
-            <Link to={`/${clientId}/plans`} className="quadrant-link">
-                <PlansHeld client={client} />
-            </Link>
-            <Link to={`/${clientId}/risk`} className="quadrant-link">
-                <RiskProfile clientId={clientId} client={client} mode="overview" />
-            </Link>
-        </main>
-    );
-
-    const renderFocusedQuadrant = () => {
-        switch (quadrantId) {
-            case 'asset-allocation': return <AssetAllocation client={client} />;
-            case 'cashflow': return <CashflowAnalysis client={client} />;
-            case 'plans': return <PlansHeld client={client} />;
-            case 'risk': return <RiskProfile clientId={clientId} client={client} mode="focused" />;
-            default: return null;
-        }
-    };
-
     if (!clientId) {
         return (
             <div className="dashboard-container animate-fade">
@@ -651,6 +897,46 @@ const Dashboard: React.FC = () => {
             </div>
         );
     }
+
+    if (loading) {
+        return (
+            <div className="dashboard-container animate-fade">
+                <div className="empty-state-container glass-card">
+                    <div className="empty-state-icon loading-spinner-icon">⏳</div>
+                    <h2>Loading Client Data</h2>
+                    <p>Fetching the latest financial records from Supabase...</p>
+                </div>
+            </div>
+        );
+    }
+    if (!client && !loading) return <div className="error-text">Client not found.</div>;
+
+    const renderFullGrid = () => (
+        <main className="dashboard-grid">
+            <Link to={`/${clientId}/asset-allocation`} className="quadrant-link">
+                <AssetAllocation client={client} />
+            </Link>
+            <Link to={`/${clientId}/cashflow`} className="quadrant-link">
+                <CashflowAnalysis client={client} />
+            </Link>
+            <Link to={`/${clientId}/plans`} className="quadrant-link">
+                <PlansHeld client={client} mode="overview" />
+            </Link>
+            <Link to={`/${clientId}/risk`} className="quadrant-link">
+                <RiskProfile clientId={clientId} client={client} mode="overview" />
+            </Link>
+        </main>
+    );
+
+    const renderFocusedQuadrant = () => {
+        switch (quadrantId) {
+            case 'asset-allocation': return <AssetAllocation client={client} />;
+            case 'cashflow': return <CashflowAnalysis client={client} />;
+            case 'plans': return <PlansHeld client={client} mode="focused" />;
+            case 'risk': return <RiskProfile clientId={clientId} client={client} mode="focused" />;
+            default: return null;
+        }
+    };
 
     return (
         <div className="dashboard-container animate-fade">

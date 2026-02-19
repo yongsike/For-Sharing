@@ -347,6 +347,11 @@
     color: var(--warning);
 }
 
+.status-pill.ended {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
 .status-pill.grace-period {
     background: rgba(239, 68, 68, 0.15);
     color: var(--danger);
@@ -528,4 +533,248 @@
     color: var(--text-muted);
     font-size: 1.1rem;
     line-height: 1.6;
+}
+
+.loading-spinner-icon {
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 800px;
+    background: rgba(17, 24, 39, 0.95);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    padding: 2.5rem;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #fff;
+}
+
+.modal-header {
+    margin-bottom: 2rem;
+}
+
+.modal-header h2 {
+    margin-bottom: 0.5rem;
+}
+
+.modal-id {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.plans-table.interactive tbody tr {
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.plans-table.interactive tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.filter-bar {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-md);
+    flex-wrap: wrap;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.filter-group label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+/* Custom Select Styles */
+.custom-select-wrapper {
+    position: relative;
+    min-width: 160px;
+}
+
+.custom-select-trigger {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-select-trigger:hover,
+.custom-select-trigger.open {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.custom-select-trigger .chevron {
+    width: 1rem;
+    height: 1rem;
+    opacity: 0.4;
+    transition: transform 0.2s ease;
+}
+
+.custom-select-trigger.open .chevron {
+    transform: rotate(180deg);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 0.5rem;
+    max-height: 250px;
+    overflow-y: auto;
+    background: #111827;
+    /* Solid background to make it opaque */
+    backdrop-filter: none;
+    /* Remove blur to ensure full opacity */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+.custom-select-option {
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-select-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+.custom-select-option.selected {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s ease;
+    min-width: 140px;
+}
+
+.filter-input:focus {
+    border-color: var(--primary);
+    background: rgba(17, 24, 39, 0.8);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.filter-input option {
+    background: #111827;
+}
+
+.clear-filters {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-top: 1.2rem;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.clear-filters:hover {
+    opacity: 1;
+    text-decoration: underline;
 }
