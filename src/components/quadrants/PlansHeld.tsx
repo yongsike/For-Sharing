@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { CustomizedXAxisTick } from '../ChartUtils';
 
@@ -54,12 +55,24 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
     const hasValue = valuationData.some(v => v.value > 0);
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>&times;</button>
-                <div className="modal-header">
-                    <h2>{plan.plan_name}</h2>
-                    <div className="modal-id">Plan ID: {plan.plan_id} • Status: {plan.status}</div>
+        <div className="modal-overlay animate-fade" onClick={onClose} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+            paddingTop: '70px'
+        }}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+                width: '95%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto',
+                position: 'relative', padding: '1.5rem 2.5rem 3rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1rem',
+                background: '#fff', borderRadius: '16px', boxShadow: 'var(--shadow-xl)'
+            }}>
+                <button
+                    onClick={onClose}
+                    style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '10px', zIndex: 10 }}
+                >&times;</button>
+                <div className="modal-header" style={{ textAlign: 'center', marginBottom: '0.5rem', marginTop: '1rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{plan.plan_name}</h2>
+                    <div className="modal-id" style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Plan ID: {plan.plan_id} • Status: {plan.status}</div>
                 </div>
 
                 {hasValue ? (
@@ -302,114 +315,119 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview' }) => {
     };
 
     return (
-        <section className="glass-card quadrant">
-            <div className="card-header">
-                <h3>Plans Held</h3>
-            </div>
+        <>
+            <section className="glass-card quadrant">
+                <div className="card-header">
+                    <h3>Plans Held</h3>
+                </div>
 
-            {mode === 'focused' && (
-                <div className="filter-bar animate-fade">
-                    <CustomSelect
-                        label="Asset Class"
-                        value={assetFilter}
-                        onChange={setAssetFilter}
-                        options={[
-                            { label: 'All', value: 'All' },
-                            { label: 'Equity', value: 'Equity' },
-                            { label: 'Fixed Income', value: 'Fixed Income' },
-                            { label: 'Cash', value: 'Cash' },
-                            { label: 'Life Insurance', value: 'Life Insurance' },
-                            { label: 'Health Insurance', value: 'Health Insurance' },
-                            { label: 'General Insurance', value: 'General Insurance' }
-                        ]}
-                    />
+                {mode === 'focused' && (
+                    <div className="filter-bar animate-fade">
+                        <CustomSelect
+                            label="Asset Class"
+                            value={assetFilter}
+                            onChange={setAssetFilter}
+                            options={[
+                                { label: 'All', value: 'All' },
+                                { label: 'Equity', value: 'Equity' },
+                                { label: 'Fixed Income', value: 'Fixed Income' },
+                                { label: 'Cash', value: 'Cash' },
+                                { label: 'Life Insurance', value: 'Life Insurance' },
+                                { label: 'Health Insurance', value: 'Health Insurance' },
+                                { label: 'General Insurance', value: 'General Insurance' }
+                            ]}
+                        />
 
-                    <CustomSelect
-                        label="Start Month"
-                        value={startDateFilter}
-                        onChange={setStartDateFilter}
-                        options={startMonthOptions}
-                    />
+                        <CustomSelect
+                            label="Start Month"
+                            value={startDateFilter}
+                            onChange={setStartDateFilter}
+                            options={startMonthOptions}
+                        />
 
-                    <CustomSelect
-                        label="End Month"
-                        value={endDateFilter}
-                        onChange={setEndDateFilter}
-                        options={endMonthOptions}
-                    />
+                        <CustomSelect
+                            label="End Month"
+                            value={endDateFilter}
+                            onChange={setEndDateFilter}
+                            options={endMonthOptions}
+                        />
 
-                    <CustomSelect
-                        label="Status"
-                        value={statusFilter}
-                        onChange={setStatusFilter}
-                        options={[
-                            { label: 'All', value: 'All' },
-                            { label: 'Pending', value: 'Pending' },
-                            { label: 'Active', value: 'Active' },
-                            { label: 'Lapsed', value: 'Lapsed' },
-                            { label: 'Matured', value: 'Matured' },
-                            { label: 'Settled', value: 'Settled' },
-                            { label: 'Void', value: 'Void' }
-                        ]}
-                    />
+                        <CustomSelect
+                            label="Status"
+                            value={statusFilter}
+                            onChange={setStatusFilter}
+                            options={[
+                                { label: 'All', value: 'All' },
+                                { label: 'Pending', value: 'Pending' },
+                                { label: 'Active', value: 'Active' },
+                                { label: 'Lapsed', value: 'Lapsed' },
+                                { label: 'Matured', value: 'Matured' },
+                                { label: 'Settled', value: 'Settled' },
+                                { label: 'Void', value: 'Void' }
+                            ]}
+                        />
 
-                    {(assetFilter !== 'All' || statusFilter !== 'All' || startDateFilter || endDateFilter) && (
-                        <button className="clear-filters" onClick={clearFilters}>
-                            Clear Filters
-                        </button>
+                        {(assetFilter !== 'All' || statusFilter !== 'All' || startDateFilter || endDateFilter) && (
+                            <button className="clear-filters" onClick={clearFilters}>
+                                Clear Filters
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                <div className="plans-table-container">
+                    <table className={`plans-table ${mode === 'focused' ? 'interactive' : ''}`}>
+                        <thead>
+                            <tr>
+                                <th>Plan Name</th>
+                                <th>Asset Class</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredPlans.map((plan: any, index: number) => {
+                                const status = plan.status;
+                                return (
+                                    <tr key={index} onClick={(e) => {
+                                        if (mode !== 'focused') return;
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setSelectedPlan(plan);
+                                    }}>
+                                        <td>{plan.plan_name}</td>
+                                        <td>{plan.asset_class}</td>
+                                        <td>{formatDate(plan.start_date)}</td>
+                                        <td>{formatDate(plan.end_date)}</td>
+                                        <td>
+                                            <span className={`status-pill ${status.toLowerCase()}`}>
+                                                {status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    {filteredPlans.length === 0 && (
+                        <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                            No plans found matching your filters.
+                        </p>
                     )}
                 </div>
-            )}
+            </section>
 
-            <div className="plans-table-container">
-                <table className={`plans-table ${mode === 'focused' ? 'interactive' : ''}`}>
-                    <thead>
-                        <tr>
-                            <th>Plan Name</th>
-                            <th>Asset Class</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredPlans.map((plan: any, index: number) => {
-                            const status = plan.status;
-                            return (
-                                <tr key={index} onClick={(e) => {
-                                    if (mode !== 'focused') return;
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setSelectedPlan(plan);
-                                }}>
-                                    <td>{plan.plan_name}</td>
-                                    <td>{plan.asset_class}</td>
-                                    <td>{formatDate(plan.start_date)}</td>
-                                    <td>{formatDate(plan.end_date)}</td>
-                                    <td>
-                                        <span className={`status-pill ${status.toLowerCase()}`}>
-                                            {status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-                {filteredPlans.length === 0 && (
-                    <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                        No plans found matching your filters.
-                    </p>
-                )}
-            </div>
-
-            {selectedPlan && (
-                <PlanDetailModal
-                    plan={selectedPlan}
-                    onClose={() => setSelectedPlan(null)}
-                />
-            )}
-        </section>
+            {
+                selectedPlan && createPortal(
+                    <PlanDetailModal
+                        plan={selectedPlan}
+                        onClose={() => setSelectedPlan(null)}
+                    />,
+                    document.body
+                )
+            }
+        </>
     );
 };
 

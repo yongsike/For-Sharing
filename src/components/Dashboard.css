@@ -409,8 +409,9 @@
 }
 
 .loading-shimmer .line {
-    height: 14px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    height: 12px;
+    background: #f0f0f0;
+    background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 4px;

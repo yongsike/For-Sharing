@@ -21,10 +21,6 @@ interface AssetAllocationProps {
 const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
     // 1. Process Allocation history (stacked bar chart: month × asset_class)
     const { history, assetClasses } = React.useMemo(() => {
-        if (!client?.cashflow || !client?.client_plans) {
-            return { history: [], assetClasses: [] };
-        }
-
         const cashflowMonths: string[] = [...(client.cashflow || [])]
             .sort((a: any, b: any) => new Date(a.as_of_date).getTime() - new Date(b.as_of_date).getTime())
             .map((c: any) => c.as_of_date);
@@ -37,8 +33,9 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
         const allocation_history = cashflowMonths.map((asOfDate: string) => {
             const monthTs = new Date(asOfDate).getTime();
             const row: Record<string, any> = {
+                as_of_date: asOfDate,
                 date: new Date(asOfDate).toLocaleDateString('en-SG', { month: 'short', year: '2-digit' }),
-                fullDate: new Date(asOfDate).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' }),
+                fullDate: new Date(asOfDate).toLocaleDateString('en-SG', { day: '2-digit', month: 'long', year: 'numeric' }),
             };
 
             allAssetClasses.forEach((cls: string) => { row[cls] = 0; });
@@ -85,9 +82,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
 
     const hasData = history.length > 0 && assetClasses.length > 0;
 
-    const CustomTooltip = ({ active, payload, label }: any) => {
+    const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const total = payload.reduce((s: number, e: any) => s + (e.value || 0), 0);
+            const data = payload[0].payload;
             return (
                 <div style={{
                     backgroundColor: '#fff',
@@ -97,7 +95,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
                     boxShadow: 'var(--shadow-lg)',
                     minWidth: 160,
                 }}>
-                    <p style={{ color: 'var(--secondary)', fontWeight: 700, marginBottom: 6 }}>{label}</p>
+                    <p style={{ color: 'var(--secondary)', fontWeight: 700, marginBottom: 6 }}>{data.fullDate}</p>
                     {payload.map((entry: any, i: number) => entry.value > 0 && (
                         <p key={i} style={{ color: entry.fill, fontSize: '0.85rem', margin: '3px 0' }}>
                             {entry.name}: <span style={{ fontWeight: 600 }}>${entry.value.toLocaleString()}</span>
@@ -120,10 +118,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
             <div className="chart-container" style={{ width: '100%', flex: 1, marginTop: '10px' }}>
                 {hasData ? (
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={history} margin={{ top: 5, right: 20, bottom: 35, left: 0 }}>
+                        <BarChart data={history} margin={{ top: 0, right: 20, bottom: 0, left: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis
-                                dataKey="date"
+                                dataKey="as_of_date"
                                 stroke="var(--text-muted)"
                                 tick={<CustomizedXAxisTick />}
                                 tickLine={false}
@@ -139,7 +137,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
                                 axisLine={false}
                             />
                             <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                            <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: '5px' }} />
                             {assetClasses.map((cls, i) => (
                                 <Bar
                                     key={cls}

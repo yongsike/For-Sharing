@@ -162,11 +162,22 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview' }) 
                 )}
 
                 <div className="ai-analysis-content">
-                    {loading && !structuredAnalysis && (
-                        <div className="loading-shimmer">
-                            <div className="line"></div>
-                            <div className="line short"></div>
-                            <div className="line"></div>
+                    {loading && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem 0' }}>
+                            <div className="loading-shimmer">
+                                <div className="line" style={{ width: '90%' }}></div>
+                                <div className="line" style={{ width: '100%' }}></div>
+                                <div className="line short"></div>
+                            </div>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.75rem',
+                                color: 'var(--text-muted)'
+                            }}>
+                                <p style={{ fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.05em' }}>Thinking...</p>
+                            </div>
                         </div>
                     )}
 
