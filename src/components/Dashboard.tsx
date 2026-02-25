@@ -41,15 +41,21 @@ const Dashboard: React.FC = () => {
                         ),
                         cashflow (
                             as_of_date,
-                            salary,
+                            employment_income_gross,
                             rental_income,
-                            other_inflow,
-                            living_expenses,
-                            debt_repayment,
-                            other_outflow,
+                            investment_income,
+                            household_expenses,
+                            income_tax,
+                            insurance_premiums,
+                            property_expenses,
+                            property_loan_repayment,
+                            non_property_loan_repayment,
+                            cpf_contribution_total,
+                            regular_investments,
                             total_inflow,
                             total_outflow,
-                            net_surplus
+                            net_surplus,
+                            net_cashflow
                         )
                     `)
                     .eq('client_id', clientId)

@@ -21,7 +21,19 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
                 fullDate: new Date(item.as_of_date).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' }),
                 inflow: parseFloat(item.total_inflow),
                 outflow: parseFloat(item.total_outflow),
-                net: parseFloat(item.net_surplus)
+                net: parseFloat(item.net_surplus),
+                employmentIncome: parseFloat(item.employment_income_gross || 0),
+                rentalIncome: parseFloat(item.rental_income || 0),
+                investmentIncome: parseFloat(item.investment_income || 0),
+                householdExpenses: parseFloat(item.household_expenses || 0),
+                incomeTax: parseFloat(item.income_tax || 0),
+                insurancePremiums: parseFloat(item.insurance_premiums || 0),
+                propertyExpenses: parseFloat(item.property_expenses || 0),
+                propertyLoan: parseFloat(item.property_loan_repayment || 0),
+                nonPropertyLoan: parseFloat(item.non_property_loan_repayment || 0),
+                cpf: parseFloat(item.cpf_contribution_total || 0),
+                regularInvestments: parseFloat(item.regular_investments || 0),
+                postInvestmentNet: parseFloat(item.net_cashflow || 0)
             }));
     }, [client?.cashflow]);
 
@@ -30,20 +42,29 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
     // Custom Tooltip for better UX
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
+            const data = payload[0].payload;
             return (
                 <div className="custom-tooltip" style={{
                     backgroundColor: '#fff',
                     padding: '12px',
                     border: '1px solid var(--border)',
-                    borderRadius: '4px',
-                    boxShadow: 'var(--shadow-lg)'
+                    borderRadius: '8px',
+                    boxShadow: 'var(--shadow-lg)',
+                    minWidth: '200px'
                 }}>
-                    <p className="tooltip-date" style={{ color: 'var(--secondary)', marginBottom: '8px', fontWeight: 600 }}>{payload[0].payload.fullDate}</p>
-                    {payload.map((entry: any, index: number) => (
-                        <p key={index} style={{ color: entry.color, fontSize: '0.9rem', margin: '4px 0' }}>
-                            {entry.name}: <span style={{ fontWeight: 600 }}>${entry.value.toLocaleString()}</span>
-                        </p>
-                    ))}
+                    <p className="tooltip-date" style={{ color: 'var(--secondary)', marginBottom: '8px', fontWeight: 600 }}>{data.fullDate}</p>
+                    <p style={{ color: 'var(--success)', fontSize: '0.9rem', margin: '4px 0' }}>
+                        Total Inflow: <span style={{ fontWeight: 600 }}>${data.inflow.toLocaleString()}</span>
+                    </p>
+                    <p style={{ color: 'var(--danger)', fontSize: '0.9rem', margin: '4px 0' }}>
+                        Total Outflow: <span style={{ fontWeight: 600 }}>${data.outflow.toLocaleString()}</span>
+                    </p>
+                    <p style={{ color: 'var(--primary)', fontSize: '0.9rem', margin: '4px 0', borderTop: '1px solid var(--border)', paddingTop: '4px' }}>
+                        Net Surplus: <span style={{ fontWeight: 600 }}>${data.net.toLocaleString()}</span>
+                    </p>
+                    <p style={{ color: 'var(--warning)', fontSize: '0.9rem', margin: '4px 0' }}>
+                        Net Cashflow: <span style={{ fontWeight: 600 }}>${data.postInvestmentNet.toLocaleString()}</span>
+                    </p>
                 </div>
             );
         }
@@ -82,7 +103,7 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
                             <Line
                                 type="monotone"
                                 dataKey="inflow"
-                                name="Inflow"
+                                name="Total Inflow"
                                 stroke="var(--success)"
                                 strokeWidth={2}
                                 dot={{ r: 4, fill: 'var(--success)', strokeWidth: 0 }}
@@ -91,7 +112,7 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
                             <Line
                                 type="monotone"
                                 dataKey="outflow"
-                                name="Outflow"
+                                name="Total Outflow"
                                 stroke="var(--danger)"
                                 strokeWidth={2}
                                 dot={{ r: 4, fill: 'var(--danger)', strokeWidth: 0 }}
@@ -104,6 +125,16 @@ const Cashflow: React.FC<CashflowProps> = ({ client }) => {
                                 stroke="var(--primary)"
                                 strokeWidth={2}
                                 dot={{ r: 4, fill: 'var(--primary)', strokeWidth: 0 }}
+                                activeDot={{ r: 6 }}
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="postInvestmentNet"
+                                name="Net Cashflow"
+                                stroke="var(--warning)"
+                                strokeWidth={2}
+                                strokeDasharray="5 5"
+                                dot={{ r: 4, fill: 'var(--warning)', strokeWidth: 0 }}
                                 activeDot={{ r: 6 }}
                             />
                         </LineChart>

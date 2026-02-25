@@ -195,7 +195,6 @@ df_inv_vals.to_csv('synthetic data/investment_valuations.csv', index=False)
 df_ins_vals.to_csv('synthetic data/insurance_valuations.csv', index=False)
 df_cash.to_csv('synthetic data/cashflow.csv', index=False)
 
-print(f"CSVs generated successfully!")
 print(f"  - clients.csv: {len(df_clients)} rows")
 print(f"  - client_plans.csv: {len(df_plans)} rows")
 print(f"  - investment_valuations.csv: {len(df_inv_vals)} rows")

@@ -70,7 +70,7 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview' }) 
                 )[0];
 
                 const cashflowString = latestCashflow
-                    ? `Inflow: $${latestCashflow.total_inflow}, Outflow: $${latestCashflow.total_outflow}, Net: $${latestCashflow.net_surplus} (${new Date(latestCashflow.as_of_date).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' })})`
+                    ? `Total Inflow: $${latestCashflow.total_inflow}, Total Outflow: $${latestCashflow.total_outflow}, Net Surplus: $${latestCashflow.net_surplus}, Net Cashflow (post-investment): $${latestCashflow.net_cashflow} (${new Date(latestCashflow.as_of_date).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' })})`
                     : 'No cashflow data';
 
                 const plansString = client.client_plans?.length > 0
