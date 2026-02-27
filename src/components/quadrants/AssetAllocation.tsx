@@ -16,14 +16,24 @@ const FALLBACK_COLORS = ['#C5B358', '#D4A373', '#719266', '#BC6C25', '#9B2226', 
 
 interface AssetAllocationProps {
     client?: any;
+    dateRange?: { startDate: string; endDate: string };
 }
 
-const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
+const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, dateRange }) => {
     // 1. Process Allocation history (stacked bar chart: month × asset_class)
     const { history, assetClasses } = React.useMemo(() => {
-        const cashflowMonths: string[] = [...(client.cashflow || [])]
+        let cashflowMonths: string[] = [...(client.cashflow || [])]
             .sort((a: any, b: any) => new Date(a.as_of_date).getTime() - new Date(b.as_of_date).getTime())
             .map((c: any) => c.as_of_date);
+
+        if (dateRange) {
+            cashflowMonths = cashflowMonths.filter(dateStr => {
+                const itemDate = dateStr.substring(0, 10); // get YYYY-MM-DD
+                if (dateRange.startDate && itemDate < dateRange.startDate) return false;
+                if (dateRange.endDate && itemDate > dateRange.endDate) return false;
+                return true;
+            });
+        }
 
         // Collect asset classes from ALL plans
         const assetClassSet = new Set<string>();
@@ -78,7 +88,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client }) => {
         );
 
         return { history: allocation_history, assetClasses: activeAssetClasses };
-    }, [client?.cashflow, client?.client_plans]);
+    }, [client?.cashflow, client?.client_plans, dateRange]);
 
     const hasData = history.length > 0 && assetClasses.length > 0;
 

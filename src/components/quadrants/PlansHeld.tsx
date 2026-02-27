@@ -205,9 +205,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
 interface PlansHeldProps {
     client?: any;
     mode?: 'overview' | 'focused';
+    dateRange?: { startDate: string; endDate: string };
 }
 
-const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview' }) => {
+const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRange }) => {
     const rawPlans = client?.client_plans || [];
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
@@ -303,9 +304,18 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview' }) => {
                 }
             }
 
+            // Global Dashboard Date Range Filter
+            if (dateRange) {
+                const planStart = plan.start_date ? plan.start_date.substring(0, 10) : null;
+                if (planStart) {
+                    if (dateRange.startDate && planStart < dateRange.startDate) return false;
+                    if (dateRange.endDate && planStart > dateRange.endDate) return false;
+                }
+            }
+
             return true;
         });
-    }, [rawPlans, assetFilter, statusFilter, startDateFilter, endDateFilter]);
+    }, [rawPlans, assetFilter, statusFilter, startDateFilter, endDateFilter, dateRange]);
 
     const clearFilters = () => {
         setAssetFilter('All');

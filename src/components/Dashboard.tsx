@@ -14,6 +14,26 @@ const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const [client, setClient] = useState<any>(null);
     const [loading, setLoading] = useState(!!clientId);
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newStart = e.target.value;
+        setStartDate(newStart);
+        // Ensure start date is not after end date
+        if (newStart && endDate && newStart > endDate) {
+            setEndDate(newStart);
+        }
+    };
+
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newEnd = e.target.value;
+        setEndDate(newEnd);
+        // Ensure end date is not before start date
+        if (newEnd && startDate && newEnd < startDate) {
+            setStartDate(newEnd);
+        }
+    };
 
     useEffect(() => {
         const fetchClientData = async () => {
@@ -64,8 +84,6 @@ const Dashboard: React.FC = () => {
 
                 if (error) throw error;
 
-                // 1. Enrich raw data for basic access if needed (optional)
-                // We'll just pass the raw data and let quadrants handle their own transformation
                 setClient(data);
             } catch (err) {
                 console.error('Error fetching comprehensive client data:', err);
@@ -105,29 +123,31 @@ const Dashboard: React.FC = () => {
     }
     if (!client && !loading) return <div className="error-text">Client not found.</div>;
 
+    const dateRange = { startDate, endDate };
+
     const renderFullGrid = () => (
         <main className="dashboard-grid">
             <Link to={`/${clientId}/asset-allocation`} className="quadrant-link">
-                <AssetAllocation client={client} />
+                <AssetAllocation client={client} dateRange={dateRange} />
             </Link>
             <Link to={`/${clientId}/cashflow`} className="quadrant-link">
-                <Cashflow client={client} />
+                <Cashflow client={client} dateRange={dateRange} />
             </Link>
             <Link to={`/${clientId}/plans`} className="quadrant-link">
-                <PlansHeld client={client} mode="overview" />
+                <PlansHeld client={client} mode="overview" dateRange={dateRange} />
             </Link>
             <Link to={`/${clientId}/risk`} className="quadrant-link">
-                <RiskProfile clientId={clientId} client={client} mode="overview" />
+                <RiskProfile clientId={clientId} client={client} mode="overview" dateRange={dateRange} />
             </Link>
         </main>
     );
 
     const renderFocusedQuadrant = () => {
         switch (quadrantId) {
-            case 'asset-allocation': return <AssetAllocation client={client} />;
-            case 'cashflow': return <Cashflow client={client} mode="focused" />;
-            case 'plans': return <PlansHeld client={client} mode="focused" />;
-            case 'risk': return <RiskProfile clientId={clientId} client={client} mode="focused" />;
+            case 'asset-allocation': return <AssetAllocation client={client} dateRange={dateRange} />;
+            case 'cashflow': return <Cashflow client={client} mode="focused" dateRange={dateRange} />;
+            case 'plans': return <PlansHeld client={client} mode="focused" dateRange={dateRange} />;
+            case 'risk': return <RiskProfile clientId={clientId} client={client} mode="focused" dateRange={dateRange} />;
             default: return null;
         }
     };
@@ -139,6 +159,37 @@ const Dashboard: React.FC = () => {
                 showBack={isFocused}
                 onBack={() => navigate(`/${clientId}`)}
             />
+            {/* Date Range Filter */}
+            <div className="filter-bar animate-fade" style={{ marginTop: '0', marginBottom: '1.5rem', padding: '1rem 1.5rem' }}>
+                <div className="filter-group">
+                    <label>Start Date</label>
+                    <input
+                        type="date"
+                        className="filter-input"
+                        style={{ minWidth: '150px' }}
+                        value={startDate}
+                        onChange={handleStartDateChange}
+                    />
+                </div>
+                <div className="filter-group">
+                    <label>End Date</label>
+                    <input
+                        type="date"
+                        className="filter-input"
+                        style={{ minWidth: '150px' }}
+                        value={endDate}
+                        onChange={handleEndDateChange}
+                    />
+                </div>
+                {(startDate || endDate) && (
+                    <button
+                        className="clear-filters"
+                        onClick={() => { setStartDate(''); setEndDate(''); }}
+                    >
+                        Clear Dates
+                    </button>
+                )}
+            </div>
             {isFocused ? (
                 <main className="focused-view">
                     {renderFocusedQuadrant()}

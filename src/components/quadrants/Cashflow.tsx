@@ -5,9 +5,10 @@ import { CustomizedXAxisTick } from '../ChartUtils';
 interface CashflowProps {
     client?: any;
     mode?: 'overview' | 'focused';
+    dateRange?: { startDate: string; endDate: string };
 }
 
-const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview' }) => {
+const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRange }) => {
     // State to track which lines are visible
     const [visibleLines, setVisibleLines] = useState<Record<string, boolean>>({
         inflow: true,
@@ -47,7 +48,18 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview' }) => {
             return [];
         }
 
-        return [...client.cashflow]
+        let data = [...client.cashflow];
+
+        if (dateRange) {
+            data = data.filter((item: any) => {
+                const itemDate = item.as_of_date.substring(0, 10);
+                if (dateRange.startDate && itemDate < dateRange.startDate) return false;
+                if (dateRange.endDate && itemDate > dateRange.endDate) return false;
+                return true;
+            });
+        }
+
+        return data
             .sort((a: any, b: any) => new Date(a.as_of_date).getTime() - new Date(b.as_of_date).getTime())
             .map((item: any) => ({
                 // Use the ISO date as the unique key for Recharts to handle multiple points correctly
@@ -74,7 +86,7 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview' }) => {
                 cpf: parseFloat(item.cpf_contribution_total || 0),
                 regularInv: parseFloat(item.regular_investments || 0)
             }));
-    }, [client?.cashflow]);
+    }, [client?.cashflow, dateRange]);
 
     // Pie chart data for the modal
     const getPieData = (data: any) => {

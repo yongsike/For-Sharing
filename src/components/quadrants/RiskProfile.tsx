@@ -5,9 +5,10 @@ interface RiskProfileProps {
     clientId?: string;
     client?: any;
     mode?: 'overview' | 'focused';
+    dateRange?: { startDate: string; endDate: string };
 }
 
-const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview' }) => {
+const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview', dateRange }) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [summary, setSummary] = useState<string>('');
