@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Dashboard from './components/Dashboard'
 import Login from './components/Login'
+import ManageUsers from './components/ManageUsers'
+import AddUser from './components/AddUser'
+import EditUsers from './components/EditUsers'
 import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
 import './App.css'
@@ -20,6 +23,30 @@ function AppContent() {
       <main>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route
+            path="/admin/manage-users"
+            element={
+              <RequireAuth>
+                <ManageUsers />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/add-user"
+            element={
+              <RequireAuth>
+                <AddUser />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/edit-users"
+            element={
+              <RequireAuth>
+                <EditUsers />
+              </RequireAuth>
+            }
+          />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route

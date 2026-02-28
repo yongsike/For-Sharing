@@ -8,8 +8,10 @@ fake = Faker()
 
 # Configuration
 NUM_CLIENTS = 30
+NUM_USERS = 5  # 1 admin + 4 staff
 
 def generate_financial_data():
+    users = []
     clients = []
     investments = []
     insurance = []
@@ -33,8 +35,30 @@ def generate_financial_data():
 
     DATE_TODAY = datetime.now().date()
 
+    # 0. Generate users (agents) - 1 admin, 4 staff
+    admin_names = ['Ryan Admin']  # Customize admin name
+    staff_first = ['Wei Ming', 'Priya', 'James', 'Sarah']
+    staff_last = ['Tan', 'Kumar', 'Lee', 'Wong']
+    for i in range(NUM_USERS):
+        is_admin = i == 0
+        if is_admin:
+            full_name = admin_names[0]
+            email = 'admin@calibre.com'
+        else:
+            full_name = f"{staff_first[i-1]} {staff_last[i-1]}"
+            email = f"{staff_first[i-1].lower()}.{staff_last[i-1].lower()}@calibre.com"
+        users.append({
+            'user_id': str(uuid.uuid4()),
+            'full_name': full_name,
+            'email': email,
+            'role': 'admin' if is_admin else 'staff',
+            'admin': is_admin
+        })
+    user_ids = [u['user_id'] for u in users]
+
     for _ in range(NUM_CLIENTS):
         c_id = str(uuid.uuid4())
+        assigned_user_id = np.random.choice(user_ids)
         # 1. Core Profile Generation (Age & Occupation first)
         client_age = np.random.randint(18, 85)
         
@@ -221,6 +245,7 @@ def generate_financial_data():
 
         clients.append({
             'client_id': c_id,
+            'assigned_user_id': assigned_user_id,
             'title': title,
             'name_as_per_id': client_full_name,
             'gender': gender,
@@ -454,14 +479,15 @@ def generate_financial_data():
                             'current_value': round(cash_val, 2)
                         })
 
-    return (pd.DataFrame(clients), pd.DataFrame(investments), pd.DataFrame(insurance),
+    return (pd.DataFrame(users), pd.DataFrame(clients), pd.DataFrame(investments), pd.DataFrame(insurance),
             pd.DataFrame(investment_valuations), pd.DataFrame(insurance_valuations),
             pd.DataFrame(cashflows), pd.DataFrame(family))
 
 # Generate data
-df_clients, df_investments, df_insurance, df_inv_vals, df_ins_vals, df_cash, df_family = generate_financial_data()
+df_users, df_clients, df_investments, df_insurance, df_inv_vals, df_ins_vals, df_cash, df_family = generate_financial_data()
 
 # Export to CSVs
+df_users.to_csv('synthetic data/users.csv', index=False)
 df_clients.to_csv('synthetic data/clients.csv', index=False)
 df_investments.to_csv('synthetic data/client_investments.csv', index=False)
 df_insurance.to_csv('synthetic data/client_insurance.csv', index=False)
@@ -471,6 +497,7 @@ df_cash.to_csv('synthetic data/cashflow.csv', index=False)
 df_family.to_csv('synthetic data/client_family.csv', index=False)
 
 print("Data generation complete:")
+print(f"  - users.csv: {len(df_users)} rows")
 print(f"  - clients.csv: {len(df_clients)} rows")
 print(f"  - client_investments.csv: {len(df_investments)} rows")
 print(f"  - client_insurance.csv: {len(df_insurance)} rows")

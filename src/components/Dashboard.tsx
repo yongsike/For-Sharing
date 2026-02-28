@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../lib/AuthProvider';
 import ClientHeader from './ClientHeader';
 import PlansHeld from './quadrants/PlansHeld';
 import RiskProfile from './quadrants/RiskProfile';
@@ -10,6 +11,7 @@ import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
     const { clientId } = useParams<{ clientId: string }>();
+    const { user } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const [client, setClient] = useState<any>(null);
@@ -88,6 +90,15 @@ const Dashboard: React.FC = () => {
                     .single();
 
                 if (error) throw error;
+
+                // Staff can only view their assigned clients; admins can view all
+                if (data && user && !user.admin) {
+                    if (!user.userId || data.assigned_user_id !== user.userId) {
+                        setClient(null);
+                        setLoading(false);
+                        return;
+                    }
+                }
 
                 if (data) {
                     // Map new schema to old structure for backward compatibility with child components

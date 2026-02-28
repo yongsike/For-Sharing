@@ -6,21 +6,25 @@ import psycopg2
 from psycopg2.extras import execute_values
 from urllib.parse import urlparse
 
-def load_env():
-    env_path = os.path.join(os.path.dirname(__file__), '..', '.env.local')
-    config = {}
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
-            for line in f:
-                if '=' in line and not line.startswith('#'):
-                    key, value = line.strip().split('=', 1)
-                    config[key] = value.strip('"').strip("'")
-    return config
+def load_env(base_dir):
+    """Load .env.local or .env from project root."""
+    for name in ('.env.local', '.env'):
+        env_path = os.path.join(base_dir, name)
+        if os.path.exists(env_path):
+            config = {}
+            with open(env_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if '=' in line and not line.startswith('#'):
+                        key, value = line.split('=', 1)
+                        config[key.strip()] = value.strip().strip('"').strip("'")
+            return config
+    return {}
 
 def main():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     synth_dir = os.path.join(base_dir, 'synthetic data')
-    config = load_env()
+    config = load_env(base_dir)
     
     # Connection Config
     db_url = config.get('VITE_SUPABASE_DATABASE_URL')
@@ -34,8 +38,15 @@ def main():
             db_url = val
             break
 
-    if not db_url and not db_password:
-        print("Error: Missing VITE_SUPABASE_DATABASE_URL or VITE_SUPABASE_PASSWORD in .env.local")
+    if not db_password:
+        env_path = os.path.join(base_dir, '.env.local')
+        print(f"Error: Missing VITE_SUPABASE_PASSWORD in .env.local")
+        print(f"  Looking for .env at: {os.path.abspath(env_path)}")
+        print(f"  File exists: {os.path.exists(env_path)}")
+        print(f"  Loaded keys: {list(config.keys())}")
+        return
+    if not supabase_url and not db_url:
+        print("Error: Missing VITE_SUPABASE_URL (your project https URL) in .env.local")
         return
 
     # 1. Generate Data
@@ -60,15 +71,16 @@ def main():
         conn.autocommit = True
         cur = conn.cursor()
 
-        # 3. Schema Reset
+        # 3. Schema Reset (clients before users - clients has FK to users)
         tables = [
-            "public.investment_valuations", 
-            "public.insurance_valuations", 
-            "public.cashflow", 
-            "public.client_family", 
-            "public.client_investments", 
-            "public.client_insurance", 
-            "public.clients"
+            "public.investment_valuations",
+            "public.insurance_valuations",
+            "public.cashflow",
+            "public.client_family",
+            "public.client_investments",
+            "public.client_insurance",
+            "public.clients",
+            "public.users"
         ]
         for t in tables:
             cur.execute(f"DROP TABLE IF EXISTS {t} CASCADE;")
@@ -77,9 +89,10 @@ def main():
             cur.execute(f.read())
         print("All tables dropped and recreated.")
 
-        # 4. Repopulate Data
+        # 4. Repopulate Data (users first - clients has FK to users)
         print("\n--- 3. Repopulating Data ---")
         data_files = [
+            ("public.users", "users.csv"),
             ("public.clients", "clients.csv"),
             ("public.client_family", "client_family.csv"),
             ("public.client_investments", "client_investments.csv"),

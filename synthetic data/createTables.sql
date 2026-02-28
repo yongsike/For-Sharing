@@ -1,5 +1,15 @@
+CREATE TABLE public.users (
+  user_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  full_name text NOT NULL,
+  email text NOT NULL UNIQUE,
+  role text NOT NULL CHECK (role IN ('admin', 'staff')),
+  admin boolean NOT NULL DEFAULT false,
+  CONSTRAINT users_pkey PRIMARY KEY (user_id)
+);
+
 CREATE TABLE public.clients (
   client_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  assigned_user_id uuid NOT NULL,
   title text NOT NULL CHECK (title IN ('Mr.', 'Ms.', 'Mrs.')),
   name_as_per_id text NOT NULL,
   gender text NOT NULL CHECK (gender IN ('Male', 'Female')),
@@ -32,7 +42,8 @@ CREATE TABLE public.clients (
   unit_no text,
   risk_profile text NOT NULL CHECK (risk_profile IN ('Level 1', 'Level 2', 'Level 3', 'Level 4')),
   last_updated date DEFAULT CURRENT_DATE,
-  CONSTRAINT clients_pkey PRIMARY KEY (client_id)
+  CONSTRAINT clients_pkey PRIMARY KEY (client_id),
+  CONSTRAINT clients_assigned_user_id_fkey FOREIGN KEY (assigned_user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT
 );
 
 CREATE TABLE public.client_family (
