@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 fake = Faker()
 
 # Configuration
-NUM_CLIENTS = 20
+NUM_CLIENTS = 30
 
 def generate_financial_data():
     clients = []
@@ -68,7 +68,7 @@ def generate_financial_data():
         client_insurance_list = []
 
         # 2. Generate Investment Plans
-        for _ in range(np.random.randint(2, 5)):
+        for _ in range(np.random.choice(6, p=[0.05, 0.15, 0.3, 0.3, 0.15, 0.05])):
             p_id = str(uuid.uuid4())
             p_type = np.random.choice(investment_types)
             status = np.random.choice(plan_statuses, p=[0.05, 0.8, 0.05, 0.0, 0.05, 0.05])
@@ -109,7 +109,7 @@ def generate_financial_data():
             client_investments_list.append(inv_obj)
 
         # 3. Generate Insurance Policies
-        for _ in range(np.random.randint(2, 5)):
+        for _ in range(np.random.choice(6, p=[0.05, 0.15, 0.3, 0.3, 0.15, 0.05])):
             p_id = str(uuid.uuid4())
             p_type = np.random.choice(insurance_types, p=[0.5, 0.25, 0.25])
             status = np.random.choice(plan_statuses, p=[0.05, 0.8, 0.05, 0.0, 0.05, 0.05])

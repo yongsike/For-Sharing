@@ -123,31 +123,56 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
                     date: client.last_updated || new Date().toISOString()
                 });
 
-                // 2. Prepare parameters for AI (EXCLUSIVELY using database data)
+                // 2. Aggregate Active Plans for Analysis (Concise & Token-Efficient)
+                const activePlans = (client.client_plans || []).filter((p: any) => p.status === 'Active');
                 const allocationMap: Record<string, number> = {};
-                let totalValue = 0;
+                let totalInvestValue = 0;
+                let totalSumAssured = 0;
+                let earliestStart: Date | null = null;
+                let latestEnd: Date | null = null;
+                const activeCategories = new Set<string>();
 
-                client.client_plans?.forEach((plan: any) => {
-                    // Pick the correct valuation source
-                    const isInsurance = plan.asset_class.includes('Insurance');
+                activePlans.forEach((plan: any) => {
+                    const isInsurance = plan.asset_class?.includes('Insurance') || plan.sum_assured !== undefined;
                     const valuations = isInsurance ? plan.insurance_valuations : plan.investment_valuations;
                     const valueKey = isInsurance ? 'cash_value' : 'market_value';
 
+                    // 1. Track Types/Categories
+                    const cat = plan.asset_class || plan.policy_type;
+                    if (cat) activeCategories.add(cat);
+
+                    // 2. Track Dates
+                    if (plan.start_date) {
+                        const d = new Date(plan.start_date);
+                        if (!earliestStart || d < earliestStart) earliestStart = d;
+                    }
+                    const endDateStr = plan.end_date || plan.expiry_date;
+                    if (endDateStr) {
+                        const d = new Date(endDateStr);
+                        if (!latestEnd || d > latestEnd) latestEnd = d;
+                    }
+
+                    // 3. Track Valuations (Aggregate & Allocation)
                     const latestVal = valuations?.sort((a: any, b: any) =>
                         new Date(b.as_of_date).getTime() - new Date(a.as_of_date).getTime()
                     )[0];
 
                     if (latestVal) {
-                        const val = parseFloat(latestVal[valueKey]);
-                        allocationMap[plan.asset_class] = (allocationMap[plan.asset_class] || 0) + val;
-                        totalValue += val;
+                        const val = parseFloat(latestVal[valueKey] || 0);
+                        if (!isInsurance) {
+                            totalInvestValue += val;
+                            allocationMap[cat] = (allocationMap[cat] || 0) + val;
+                        }
+                    }
+                    if (isInsurance && plan.sum_assured) {
+                        totalSumAssured += parseFloat(plan.sum_assured);
                     }
                 });
 
-                const allocationString = totalValue > 0
+                const allocationString = totalInvestValue > 0
                     ? Object.entries(allocationMap)
                         .filter(([_, val]) => val > 0)
-                        .map(([category, val]) => `${Math.round((val / totalValue) * 100)}% ${category}`)
+                        .map(([category, val]) => `${Math.round((val / totalInvestValue) * 100)}% ${category}`)
                         .join(', ')
                     : 'No allocation data';
 
@@ -156,11 +181,18 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
                 )[0];
 
                 const cashflowString = latestCashflow
-                    ? `Total Inflow: $${latestCashflow.total_inflow}, Total Expense: $${latestCashflow.total_expense}, Wealth Transfers: $${latestCashflow.wealth_transfers}, Net Surplus: $${latestCashflow.net_surplus}, Net Cashflow (post-investment): $${latestCashflow.net_cashflow} (${new Date(latestCashflow.as_of_date).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' })})`
+                    ? `Data as of ${new Date(latestCashflow.as_of_date).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' })}: 
+                       - Income Breakdown: Employment ($${latestCashflow.employment_income_gross}), Rental ($${latestCashflow.rental_income}), Investment ($${latestCashflow.investment_income}). Total Inflow: $${latestCashflow.total_inflow}
+                       - Expense Breakdown: Household ($${latestCashflow.household_expenses}), Tax ($${latestCashflow.income_tax}), Insurance ($${latestCashflow.insurance_premiums}), Property ($${latestCashflow.property_expenses}), Debt/Loan ($${latestCashflow.property_loan_repayment + latestCashflow.non_property_loan_repayment}). Total Expense: $${latestCashflow.total_expense}
+                       - Net State: Wealth Transfers ($${latestCashflow.wealth_transfers}), Net Surplus ($${latestCashflow.net_surplus}), Net Cashflow (post-investment/pensions) ($${latestCashflow.net_cashflow}).`
                     : 'No cashflow data';
 
-                const plansString = client.client_plans?.length > 0
-                    ? client.client_plans.map((p: any) => p.plan_name).join(', ')
+                const plansString = activePlans.length > 0
+                    ? `Active Portfolio Summary:
+                       - Total Investment Value (Mkt): $${Math.round(totalInvestValue).toLocaleString()}
+                       - Total Insurance Sum Assured: $${Math.round(totalSumAssured).toLocaleString()}
+                       - Coverage/Holding Period: ${earliestStart ? (earliestStart as Date).toLocaleDateString() : 'Unknown'} to ${latestEnd ? (latestEnd as Date).toLocaleDateString() : 'Ongoing'}
+                       - Plan Distribution: ${Array.from(activeCategories).join(', ')}`
                     : 'No active plans';
 
                 const params = {

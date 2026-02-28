@@ -103,7 +103,7 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
                                     name={isInsurance ? "Cash Value" : "Market Value"}
                                     stroke="var(--primary)"
                                     strokeWidth={3}
-                                    dot={{ r: 4, fill: 'var(--primary)', strokeWidth: 0 }}
+                                    dot={{ r: 4, fill: '#fff', stroke: 'var(--primary)', strokeWidth: 2 }}
                                     activeDot={{ r: 6 }}
                                 />
                             </LineChart>

@@ -1,12 +1,13 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { createPortal } from 'react-dom';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { CustomizedXAxisTick } from '../ChartUtils';
 
 const ALLOCATION_COLORS: Record<string, string> = {
     'Equity': 'var(--primary)',
-    'Fixed Income': 'var(--warning)',
+    'Fixed Income': '#3E5C76',
     'Cash': 'var(--success)',
-    'Bonds': 'var(--warning)',
+    'Bonds': '#3E5C76',
     'Life Insurance': '#BC6C25',
     'Health Insurance': '#9B2226',
     'General Insurance': '#606C38',
@@ -16,10 +17,27 @@ const FALLBACK_COLORS = ['#C5B358', '#D4A373', '#719266', '#BC6C25', '#9B2226', 
 
 interface AssetAllocationProps {
     client?: any;
+    mode?: 'overview' | 'focused';
     dateRange?: { startDate: string; endDate: string };
 }
 
-const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, dateRange }) => {
+const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overview', dateRange }) => {
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [selectedSnapshot, setSelectedSnapshot] = React.useState<any>(null);
+    const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
+    const [activePlanName, setActivePlanName] = React.useState<string | null>(null);
+
+    const handleChartClick = (data: any) => {
+        if (mode === 'focused' && data) {
+            const payload = data.activePayload?.[0]?.payload ||
+                (data.activeTooltipIndex !== undefined ? history[data.activeTooltipIndex] : null);
+
+            if (payload) {
+                setSelectedSnapshot(payload);
+                setIsModalOpen(true);
+            }
+        }
+    };
     // 1. Process Allocation history (stacked bar chart: month × asset_class)
     const { history, assetClasses } = React.useMemo(() => {
         let cashflowMonths: string[] = [...(client.cashflow || [])]
@@ -49,6 +67,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, dateRange }) 
             };
 
             allAssetClasses.forEach((cls: string) => { row[cls] = 0; });
+            row.plans = [];
 
             client.client_plans?.forEach((plan: any) => {
                 const ed = plan.end_date;
@@ -76,7 +95,17 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, dateRange }) 
                     new Date(a.as_of_date).getTime() > new Date(b.as_of_date).getTime() ? a : b
                 );
 
-                row[plan.asset_class] = (row[plan.asset_class] || 0) + parseFloat(best[valueKey] || 0);
+                const val = parseFloat(best[valueKey] || 0);
+                row[plan.asset_class] = (row[plan.asset_class] || 0) + val;
+
+                if (val > 0) {
+                    row.plans.push({
+                        name: plan.plan_name,
+                        value: val,
+                        category: plan.asset_class,
+                        color: ALLOCATION_COLORS[plan.asset_class] || FALLBACK_COLORS[0]
+                    });
+                }
             });
 
             return row;
@@ -128,7 +157,12 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, dateRange }) 
             <div className="chart-container" style={{ width: '100%', flex: 1, marginTop: '10px' }}>
                 {hasData ? (
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={history} margin={{ top: 0, right: 20, bottom: 0, left: 0 }}>
+                        <BarChart
+                            data={history}
+                            onClick={handleChartClick}
+                            margin={{ top: 0, right: 20, bottom: 0, left: 0 }}
+                            style={{ cursor: mode === 'focused' ? 'pointer' : 'default' }}
+                        >
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis
                                 dataKey="as_of_date"
@@ -177,7 +211,177 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, dateRange }) 
                     </div>
                 )}
             </div>
-        </section>
+
+            {isModalOpen && selectedSnapshot && createPortal(
+                <div
+                    className="modal-overlay animate-fade"
+                    onClick={() => setIsModalOpen(false)}
+                    style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(6px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+                        paddingTop: '70px'
+                    }}
+                >
+                    <div
+                        className="modal-content"
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            width: '95%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto',
+                            position: 'relative', padding: '1.5rem 2.5rem 3rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem',
+                            background: '#fff', borderRadius: '16px', boxShadow: 'var(--shadow-xl)'
+                        }}
+                    >
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '10px', zIndex: 10 }}
+                        >&times;</button>
+
+                        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                            <h2 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>Allocation Breakdown</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{selectedSnapshot.fullDate}</p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: '4rem' }}>
+                            <div style={{ flex: '1.2', minWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+
+                                <div style={{ width: '100%', height: '400px' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            {(() => {
+                                                const activeCats = assetClasses.filter(cls => (selectedSnapshot[cls] || 0) > 0);
+                                                const alignedPlans = activeCats.flatMap(cls =>
+                                                    selectedSnapshot.plans.filter((p: any) => p.category === cls)
+                                                );
+                                                const totalValue = alignedPlans.reduce((sum, p) => sum + (p.value || 0), 0);
+
+                                                return (
+                                                    <>
+                                                        <Tooltip
+                                                            formatter={(value: any, name: any) => [
+                                                                `${((Number(value) / (totalValue || 1)) * 100).toFixed(1)}%`,
+                                                                name
+                                                            ]}
+                                                        />
+                                                        <Pie
+                                                            data={alignedPlans}
+                                                            cx="50%" cy="50%" innerRadius={80} outerRadius={160} paddingAngle={1} dataKey="value" animationDuration={800}
+                                                        >
+                                                            {alignedPlans.map((p: any, idx: number) => {
+                                                                const isHighlighted = activePlanName === p.name || (activeCategory === p.category && !activePlanName);
+                                                                const isDimmed = (activePlanName && activePlanName !== p.name) || (activeCategory && activeCategory !== p.category && !activePlanName);
+
+                                                                return (
+                                                                    <Cell
+                                                                        key={`plan-${p.name}-${idx}`}
+                                                                        fill={p.color}
+                                                                        style={{
+                                                                            opacity: isDimmed ? 0.3 : 1,
+                                                                            transition: '0.2s', cursor: 'pointer', outline: 'none',
+                                                                            transform: isHighlighted ? 'scale(1.02)' : 'scale(1)',
+                                                                            transformOrigin: 'center'
+                                                                        }}
+                                                                        onMouseEnter={() => setActivePlanName(p.name)}
+                                                                        onMouseLeave={() => setActivePlanName(null)}
+                                                                    />
+                                                                );
+                                                            })}
+                                                        </Pie>
+                                                    </>
+                                                );
+                                            })()}
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                <div
+                                    style={{
+                                        width: '100%', maxWidth: '320px', padding: '15px', textAlign: 'center',
+                                        background: 'rgba(197, 179, 88, 0.08)', borderRadius: '12px', border: '1px solid rgba(197, 179, 88, 0.2)',
+                                        transition: '0.2s',
+                                        opacity: activePlanName ? 0.3 : 1
+                                    }}
+                                >
+                                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 700, letterSpacing: '0.05em' }}>Total Portfolio Value</div>
+                                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--secondary)' }}>
+                                        ${assetClasses.reduce((sum, cls) => sum + (selectedSnapshot[cls] || 0), 0).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ flex: '1', minWidth: '350px' }}>
+                                <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '1.5rem', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Details by Asset Class</h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {assetClasses.filter(cls => selectedSnapshot[cls] > 0).map((cls, i) => {
+                                        const isCatActive = activeCategory === cls || (activePlanName && selectedSnapshot.plans.find((p: any) => p.name === activePlanName)?.category === cls);
+                                        const catColor = ALLOCATION_COLORS[cls] || FALLBACK_COLORS[i % FALLBACK_COLORS.length];
+
+                                        return (
+                                            <div
+                                                key={cls}
+                                                style={{
+                                                    opacity: activeCategory && activeCategory !== cls && !activePlanName ? 0.3 : 1,
+                                                    transition: 'all 0.3s ease',
+                                                    padding: '8px 12px',
+                                                    borderRadius: '8px',
+                                                    background: isCatActive ? (catColor.includes('primary') ? 'rgba(197, 179, 88, 0.05)' : 'rgba(100, 100, 100, 0.04)') : 'transparent',
+                                                    borderLeft: isCatActive ? `4px solid ${catColor}` : '4px solid transparent',
+                                                    boxShadow: isCatActive ? '0 4px 15px rgba(0,0,0,0.05)' : 'none'
+                                                }}
+                                                onMouseEnter={() => setActiveCategory(cls)}
+                                                onMouseLeave={() => setActiveCategory(null)}
+                                            >
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: catColor, boxShadow: '0 0 10px rgba(0,0,0,0.1)' }} />
+                                                        <span style={{ fontWeight: 800, color: 'var(--secondary)', letterSpacing: '-0.01em', fontSize: '0.95rem' }}>{cls}</span>
+                                                    </div>
+                                                    <span style={{ fontWeight: 700, color: 'var(--secondary)' }}>${(selectedSnapshot[cls] || 0).toLocaleString()}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '12px' }}>
+                                                    {selectedSnapshot.plans.filter((p: any) => p.category === cls).map((plan: any, idx: number) => {
+                                                        const isPlanActive = activePlanName === plan.name;
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                onMouseEnter={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setActivePlanName(plan.name);
+                                                                }}
+                                                                onMouseLeave={() => setActivePlanName(null)}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    fontSize: '0.85rem',
+                                                                    color: isPlanActive ? 'var(--secondary)' : 'var(--text-muted)',
+                                                                    fontWeight: isPlanActive ? 700 : 400,
+                                                                    padding: '4px 10px',
+                                                                    borderRadius: '6px',
+                                                                    background: isPlanActive ? '#fff' : 'transparent',
+                                                                    borderLeft: isPlanActive ? `2px solid ${plan.color}` : '2px solid transparent',
+                                                                    boxShadow: isPlanActive ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                                                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                    cursor: 'pointer',
+                                                                    transform: isPlanActive ? 'translateX(4px)' : 'none'
+                                                                }}
+                                                            >
+                                                                <span>{plan.name}</span>
+                                                                <span>${plan.value.toLocaleString()}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+        </section >
     );
 };
 

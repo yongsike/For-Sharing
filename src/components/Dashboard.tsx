@@ -202,7 +202,7 @@ const Dashboard: React.FC = () => {
 
     const renderFocusedQuadrant = () => {
         switch (quadrantId) {
-            case 'asset-allocation': return <AssetAllocation client={client} dateRange={dateRange} />;
+            case 'asset-allocation': return <AssetAllocation client={client} mode="focused" dateRange={dateRange} />;
             case 'cashflow': return <Cashflow client={client} mode="focused" dateRange={dateRange} />;
             case 'plans': return <PlansHeld client={client} mode="focused" dateRange={dateRange} />;
             case 'risk': return (

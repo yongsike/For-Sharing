@@ -16,10 +16,10 @@ const SYSTEM_INSTRUCTION_BASE = `Role: You are a Financial Planning Consultant a
 Objective: Synthesize data to determine if the client's current financial reality matches their stated risk appetite.
 
 Data Inputs for Synthesis:
-- Risk Profile Category: [e.g. Conservative, Balanced, Aggressive]
-- Investment Allocation: [e.g. 60% Equities, 20% Fixed Income, 20% Cash]
-- Cashflow: [e.g. Inflow, Outflow, Net]
-- Plans Held: [e.g. Tax-advantaged accounts, Pensions, Insurance policies]
+- Risk Profile Category
+- Investment Allocation
+- Cashflow
+- Plans Held
 
 Analysis Requirements and Logic:
 - Allocation Alignment: Does the current Asset Allocation match the volatility expected of their Risk Profile?
@@ -85,7 +85,7 @@ export async function* generateRiskAnalysis(params: RiskAnalysisParams) {
       "Recommendations": { type: Type.STRING },
     },
   };
-  const instruction = `- Key Insights: Bulleted insights based on synthesized data.
+  const instruction = `- Key Insights: Concise insights based on synthesized data.
 - Potential Risks: Any immediate dangers.
 - Recommendations: Clear actions for the advisor to take.`;
 
