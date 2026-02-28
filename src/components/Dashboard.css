@@ -101,6 +101,11 @@
     align-items: flex-end;
 }
 
+.stat-group.align-center {
+    align-items: center;
+    text-align: center;
+}
+
 .label {
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -385,7 +390,7 @@
 }
 
 .ai-analysis-content {
-    margin-top: 0.5rem;
+
     padding: 1rem;
     background: #fff;
     border-radius: var(--radius-md);
@@ -489,9 +494,7 @@
 .risk-header-info {
     display: flex;
     gap: 2rem;
-    margin-bottom: 0.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
 }
 
 .risk-category-display,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { generateRiskAnalysis, generateRiskSummary } from '../../lib/riskProfileAI';
 
 interface RiskProfileProps {
@@ -6,35 +7,119 @@ interface RiskProfileProps {
     client?: any;
     mode?: 'overview' | 'focused';
     dateRange?: { startDate: string; endDate: string };
+    cache?: { overview?: string; focused?: any } | null;
+    onCacheUpdate?: (update: { overview?: string; focused?: any }) => void;
 }
 
-const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview', dateRange }) => {
+const RISK_LEVEL_DESCRIPTIONS: Record<string, string> = {
+    'Level 1': 'You seek to preserve capital and understand that potential investment returns, when adjusted for inflation, may be very low or even zero. You are willing to accept a very low volatility in your investment(s).',
+    'Level 2': 'You seek small capital growth and understand that potential investment income and capital gains come with some short term fluctuations. You are willing to accept low volatility in your investment(s).',
+    'Level 3': 'You seek moderate capital growth and understand that potential moderate investment returns over the medium term come with relatively higher risks. You are willing to accept medium volatility in your investment(s) over the short term.',
+    'Level 4': 'You seek high capital gains and understand that potential higher investment returns over the long term come with relatively higher risks. You are willing to accept high volatility in your investment(s) over the short to medium term.'
+};
+
+const RiskLevelInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    return createPortal(
+        <div className="modal-overlay" onClick={onClose} style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+            backdropFilter: 'blur(4px)'
+        }}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+                width: '100%', maxWidth: '600px', padding: '2.5rem',
+                background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)',
+                position: 'relative'
+            }}>
+                <button
+                    onClick={onClose}
+                    style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >&times;</button>
+
+                <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Risk Level Guide</h2>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {Object.entries(RISK_LEVEL_DESCRIPTIONS).map(([level, desc]) => (
+                        <div key={level}>
+                            <h4 style={{ color: 'var(--primary)', marginBottom: '6px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {level}
+                            </h4>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--secondary)', lineHeight: '1.5', opacity: 0.85 }}>{desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+};
+
+const RiskProfile: React.FC<RiskProfileProps> = ({
+    client,
+    mode = 'overview',
+    dateRange,
+    cache,
+    onCacheUpdate
+}) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [summary, setSummary] = useState<string>('');
+    const [summary, setSummary] = useState<string>(cache?.overview || '');
     const [clientInfo, setClientInfo] = useState<{
         category: string;
+        description: string;
         date: string;
     } | null>(null);
 
+    const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
     const [structuredAnalysis, setStructuredAnalysis] = useState<{
         "Key Insights": string;
         "Potential Risks": string;
         "Recommendations": string;
-    } | null>(null);
+    } | null>(cache?.focused || null);
 
     useEffect(() => {
         if (!client) return;
 
+        // Reset local states if cache is null (new client/leaves page)
+        if (!cache) {
+            setSummary('');
+            setStructuredAnalysis(null);
+        }
+
         const analyze = async () => {
+            // 1. Check if already cached for this mode
+            if (mode === 'overview' && cache?.overview) {
+                setSummary(cache.overview);
+                setClientInfo({
+                    category: client.risk_profile || 'Level 2',
+                    description: RISK_LEVEL_DESCRIPTIONS[client.risk_profile] || RISK_LEVEL_DESCRIPTIONS['Level 2'],
+                    date: client.last_updated || new Date().toISOString()
+                });
+                return;
+            }
+            if (mode === 'focused' && cache?.focused) {
+                setStructuredAnalysis(cache.focused);
+                setClientInfo({
+                    category: client.risk_profile || 'Level 2',
+                    description: RISK_LEVEL_DESCRIPTIONS[client.risk_profile] || RISK_LEVEL_DESCRIPTIONS['Level 2'],
+                    date: client.last_updated || new Date().toISOString()
+                });
+                return;
+            }
+
             setLoading(true);
             setError(null);
-            setStructuredAnalysis(null);
-            setSummary('');
+            // Don't clear if potentially switching back? But analyze is called on mount/prop change.
+            // If we are here, we need a new analysis.
 
             try {
+                const category = client.risk_profile || 'Level 2';
+                const description = RISK_LEVEL_DESCRIPTIONS[category] || RISK_LEVEL_DESCRIPTIONS['Level 2'];
+
                 setClientInfo({
-                    category: client.risk_profile || 'Balanced',
+                    category,
+                    description,
                     date: client.last_updated || new Date().toISOString()
                 });
 
@@ -80,6 +165,7 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview', da
 
                 const params = {
                     riskProfileCategory: client.risk_profile || 'Unknown',
+                    riskProfileDescription: description,
                     investmentAllocation: allocationString,
                     cashflow: cashflowString,
                     plansHeld: plansString,
@@ -97,6 +183,9 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview', da
                     try {
                         const parsed = JSON.parse(fullText);
                         setStructuredAnalysis(parsed);
+                        if (onCacheUpdate) {
+                            onCacheUpdate({ focused: parsed });
+                        }
                     } catch (parseErr) {
                         console.error('JSON Parse Error:', parseErr, 'Raw text:', fullText);
                         setError('Received invalid data from AI.');
@@ -110,10 +199,17 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview', da
 
                     try {
                         const parsed = JSON.parse(fullText);
-                        setSummary(parsed["Executive Summary"] || fullText);
+                        const exSummary = parsed["Executive Summary"] || fullText;
+                        setSummary(exSummary);
+                        if (onCacheUpdate) {
+                            onCacheUpdate({ overview: exSummary });
+                        }
                     } catch (parseErr) {
                         console.error('JSON Parse Error for summary:', parseErr);
                         setSummary(fullText);
+                        if (onCacheUpdate) {
+                            onCacheUpdate({ overview: fullText });
+                        }
                     }
                 }
             } catch (err: any) {
@@ -145,19 +241,45 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview', da
             <div className="risk-indicator">
                 {clientInfo && (
                     <div className="risk-header-info animate-fade">
-                        <div className="risk-category-display">
-                            <span className="label">Current Category</span>
-                            <span className="value">{clientInfo.category}</span>
-                        </div>
-                        <div className="risk-date-display">
-                            <span className="label">Last Assessed</span>
-                            <span className="value">
-                                {new Date(clientInfo.date).toLocaleDateString('en-SG', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric'
-                                })}
-                            </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                            <div className="risk-category-display" style={{ alignItems: 'center', textAlign: 'center' }}>
+                                <span className="label">Current Category</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span className="value" style={{ fontSize: '2rem' }}>{clientInfo.category}</span>
+                                    <button
+                                        onClick={() => setIsInfoModalOpen(true)}
+                                        style={{
+                                            width: '20px',
+                                            height: '20px',
+                                            borderRadius: '50%',
+                                            border: '1px solid var(--border)',
+                                            background: 'rgba(0,0,0,0.03)',
+                                            fontSize: '0.8rem',
+                                            color: 'var(--text-muted)',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s',
+                                            fontWeight: 700,
+                                            marginTop: '4px'
+                                        }}
+                                        title="View Risk Level Guide"
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'var(--primary)';
+                                            e.currentTarget.style.color = '#fff';
+                                            e.currentTarget.style.borderColor = 'var(--primary)';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(0,0,0,0.03)';
+                                            e.currentTarget.style.color = 'var(--text-muted)';
+                                            e.currentTarget.style.borderColor = 'var(--border)';
+                                        }}
+                                    >
+                                        ?
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -218,6 +340,7 @@ const RiskProfile: React.FC<RiskProfileProps> = ({ client, mode = 'overview', da
                     )}
                 </div>
             </div>
+            <RiskLevelInfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} />
         </section>
     );
 };

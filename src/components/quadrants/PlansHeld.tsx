@@ -19,7 +19,8 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
             .sort((a: any, b: any) => new Date(a.as_of_date).getTime() - new Date(b.as_of_date).getTime())
             .map((v: any) => ({
                 date: new Date(v.as_of_date).toLocaleDateString('en-SG', { month: 'short', year: '2-digit' }),
-                fullDate: new Date(v.as_of_date).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' }),
+                fullDate: new Date(v.as_of_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }),
+                rawDate: v.as_of_date,
                 value: parseFloat(isInsurance ? v.cash_value : v.market_value),
                 // Keep extra fields for insurance
                 ...(isInsurance && {
@@ -30,7 +31,6 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
             }));
     }, [plan, isInsurance]);
 
-    const latestValuation = valuationData.length > 0 ? valuationData[valuationData.length - 1] : null;
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
@@ -54,7 +54,7 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
 
     const hasValue = valuationData.some(v => v.value > 0);
 
-    return (
+    return createPortal(
         <div className="modal-overlay animate-fade" onClick={onClose} style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             backgroundColor: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(6px)',
@@ -63,29 +63,29 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
         }}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
                 width: '95%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto',
-                position: 'relative', padding: '1.5rem 2.5rem 3rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1rem',
+                position: 'relative', padding: '1.5rem 2.5rem 2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
                 background: '#fff', borderRadius: '16px', boxShadow: 'var(--shadow-xl)'
             }}>
                 <button
                     onClick={onClose}
                     style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '10px', zIndex: 10 }}
                 >&times;</button>
-                <div className="modal-header" style={{ textAlign: 'center', marginBottom: '0.5rem', marginTop: '1rem' }}>
+                <div className="modal-header" style={{ textAlign: 'center', marginBottom: '0.25rem', marginTop: '0.5rem' }}>
                     <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{plan.plan_name}</h2>
-                    <div className="modal-id" style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Plan ID: {plan.plan_id} • Status: {plan.status}</div>
+                    <div className="modal-id" style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Plan ID: {plan.plan_id}</div>
                 </div>
 
                 {hasValue ? (
-                    <div className="chart-container" style={{ width: '100%', height: '250px', marginTop: '20px' }}>
+                    <div className="chart-container" style={{ width: '100%', height: '350px', marginTop: '10px' }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={valuationData} margin={{ top: 10, right: 30, left: 10, bottom: 40 }}>
+                            <LineChart data={valuationData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                                 <XAxis
-                                    dataKey="date"
+                                    dataKey="rawDate"
                                     stroke="var(--text-muted)"
                                     tick={<CustomizedXAxisTick />}
                                     interval={0}
-                                    height={50}
+                                    height={30}
                                     tickLine={false}
                                     axisLine={false}
                                 />
@@ -117,42 +117,117 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
                         background: 'rgba(0, 0, 0, 0.02)',
                         borderRadius: 'var(--radius-sm)',
                         border: '1px solid var(--border)',
-                        marginTop: '1.5rem',
+                        marginTop: '1rem',
+                        marginBottom: '1rem',
                         fontSize: '0.9rem'
                     }}>
                         {isInsurance ? "This is a pure protection plan with no cash value." : "No valuation data available for this plan."}
                     </div>
                 )}
 
-                {isInsurance && latestValuation && (
-                    <div className="insurance-benefits" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                        <div className="stat-group">
-                            <span className="label">Death Benefit</span>
-                            <span className="value" style={{ color: 'var(--danger)' }}>${latestValuation.death?.toLocaleString()}</span>
+                {isInsurance && (
+                    <div className="insurance-details" style={{ marginTop: '0.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.25rem 1rem' }}>
+                        <div className="stat-group align-center">
+                            <span className="label">Policy Type</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.policy_type || '-'}</span>
                         </div>
-                        <div className="stat-group">
-                            <span className="label">Critical Illness</span>
-                            <span className="value" style={{ color: 'var(--warning)' }}>${latestValuation.ci?.toLocaleString()}</span>
+                        <div className="stat-group align-center">
+                            <span className="label">Benefit Type</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.benefit_type || '-'}</span>
                         </div>
-                        <div className="stat-group">
-                            <span className="label">Disability</span>
-                            <span className="value" style={{ color: 'var(--accent)' }}>${latestValuation.disability?.toLocaleString()}</span>
+                        <div className="stat-group align-center">
+                            <span className="label">Sum Assured</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>${(plan.sum_assured || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Premium Amount</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                ${(plan.premium_amount || 0).toLocaleString()}
+                            </span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Payment Term</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                {plan.payment_term ? `${plan.payment_term} Years` : '-'} {plan.payment_frequency ? `(${plan.payment_frequency})` : ''}
+                            </span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Life Assured</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.life_assured || '-'}</span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Start Date</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                {plan.start_date ? new Date(plan.start_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                            </span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Expiry Date</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                {plan.expiry_date ? new Date(plan.expiry_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                            </span>
                         </div>
                     </div>
                 )}
+
+                {!isInsurance && (
+                    <div className="investment-details" style={{ marginTop: '0.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.25rem 1rem' }}>
+                        <div className="stat-group align-center">
+                            <span className="label">Policy Type</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.policy_type || '-'}</span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Initial Investment</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>${(plan.initial_investment || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Contribution Amount</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                ${(plan.contribution_amount || 0).toLocaleString()}
+                            </span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Contribution Frequency</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.contribution_frequency || '-'}</span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">Start Date</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                {plan.start_date ? new Date(plan.start_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                            </span>
+                        </div>
+                        <div className="stat-group align-center">
+                            <span className="label">End Date</span>
+                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                {plan.end_date ? new Date(plan.end_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                <div className="modal-footer" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                    <div className="stat-group align-center">
+                        <span className="label" style={{ marginBottom: '8px' }}>Plan Status</span>
+                        <span className={`status-pill ${plan.status.toLowerCase()}`} style={{ fontSize: '0.85rem', padding: '6px 16px' }}>
+                            {plan.status}
+                        </span>
+                    </div>
+                </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
 interface CustomSelectProps {
     label: string;
-    value: string;
+    value: string | string[];
     options: { label: string; value: string }[];
-    onChange: (val: string) => void;
+    onChange: (val: any) => void;
+    multi?: boolean;
 }
 
-const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onChange }) => {
+const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onChange, multi = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -166,7 +241,41 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const selectedOption = options.find(o => o.value === value);
+    const isSelected = (val: string) => {
+        if (multi && Array.isArray(value)) return value.includes(val);
+        return value === val;
+    };
+
+    const handleSelect = (val: string) => {
+        if (!multi) {
+            onChange(val);
+            setIsOpen(false);
+            return;
+        }
+
+        const currentValues = Array.isArray(value) ? [...value] : [];
+
+        if (val === 'All') {
+            onChange(['All']);
+        } else {
+            const newValues = currentValues.filter(v => v !== 'All');
+            if (newValues.includes(val)) {
+                const filtered = newValues.filter(v => v !== val);
+                onChange(filtered.length === 0 ? ['All'] : filtered);
+            } else {
+                onChange([...newValues, val]);
+            }
+        }
+    };
+
+    const getTriggerLabel = () => {
+        if (!multi) return options.find(o => o.value === value)?.label || value;
+        const currentValues = Array.isArray(value) ? value : [];
+        if (currentValues.includes('All')) return 'All';
+        if (currentValues.length === 0) return 'None';
+        if (currentValues.length === 1) return options.find(o => o.value === currentValues[0])?.label || currentValues[0];
+        return `${currentValues.length} Selected`;
+    };
 
     return (
         <div className="filter-group" ref={dropdownRef}>
@@ -176,7 +285,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
                     className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    <span>{selectedOption?.label || value}</span>
+                    <span>{getTriggerLabel()}</span>
                     <svg className="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -186,12 +295,14 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
                         {options.map(opt => (
                             <div
                                 key={opt.value}
-                                className={`custom-select-option ${value === opt.value ? 'selected' : ''}`}
-                                onClick={() => {
-                                    onChange(opt.value);
-                                    setIsOpen(false);
-                                }}
+                                className={`custom-select-option ${isSelected(opt.value) ? 'selected' : ''}`}
+                                onClick={() => handleSelect(opt.value)}
                             >
+                                {multi && (
+                                    <div className={`checkbox ${isSelected(opt.value) ? 'checked' : ''}`}>
+                                        {isSelected(opt.value) && <span>✓</span>}
+                                    </div>
+                                )}
                                 {opt.label}
                             </div>
                         ))}
@@ -213,10 +324,8 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRa
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
     // Filter states
-    const [assetFilter, setAssetFilter] = useState<string>('All');
-    const [statusFilter, setStatusFilter] = useState<string>('All');
-    const [startDateFilter, setStartDateFilter] = useState<string>('');
-    const [endDateFilter, setEndDateFilter] = useState<string>('');
+    const [assetFilter, setAssetFilter] = useState<string[]>(['All']);
+    const [statusFilter, setStatusFilter] = useState<string[]>(['All']);
 
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return '-';
@@ -227,82 +336,14 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRa
         });
     };
 
-
-
-    const startMonthOptions = React.useMemo(() => {
-        const months = new Set<string>();
-        rawPlans.forEach((plan: any) => {
-            if (plan.start_date) {
-                const date = new Date(plan.start_date);
-                months.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`);
-            }
-        });
-        const sorted = Array.from(months).sort();
-        return [
-            { label: 'All', value: '' },
-            ...sorted.map(m => ({
-                label: new Date(m).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' }),
-                value: m
-            }))
-        ];
-    }, [rawPlans]);
-
-    const endMonthOptions = React.useMemo(() => {
-        const months = new Set<string>();
-        let hasNull = false;
-        rawPlans.forEach((plan: any) => {
-            if (plan.end_date) {
-                const date = new Date(plan.end_date);
-                months.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`);
-            } else {
-                hasNull = true;
-            }
-        });
-        const sorted = Array.from(months).sort();
-        const options = [
-            { label: 'All', value: '' },
-            ...sorted.map(m => ({
-                label: new Date(m).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' }),
-                value: m
-            }))
-        ];
-        if (hasNull) {
-            options.push({ label: 'None', value: 'None' });
-        }
-        return options;
-    }, [rawPlans]);
-
     const filteredPlans = React.useMemo(() => {
         return rawPlans.filter((plan: any) => {
             // Asset Class Filter
-            if (assetFilter !== 'All' && plan.asset_class !== assetFilter) return false;
+            if (!assetFilter.includes('All') && !assetFilter.includes(plan.asset_class)) return false;
 
             // Status Filter
             const status = plan.status;
-            if (statusFilter !== 'All' && status !== statusFilter) return false;
-
-            // Start Month Filter (Exact month match)
-            if (startDateFilter) {
-                const pDate = new Date(plan.start_date);
-                const fDate = new Date(startDateFilter);
-                if (pDate.getFullYear() !== fDate.getFullYear() || pDate.getMonth() !== fDate.getMonth()) {
-                    return false;
-                }
-            }
-
-            // End Month Filter (Exact month match or None)
-            if (endDateFilter) {
-                if (endDateFilter === 'None') {
-                    if (plan.end_date) return false;
-                } else {
-                    if (!plan.end_date) return false;
-                    const pDate = new Date(plan.end_date);
-                    const fDate = new Date(endDateFilter);
-                    if (pDate.getFullYear() !== fDate.getFullYear() || pDate.getMonth() !== fDate.getMonth()) {
-                        return false;
-                    }
-                }
-            }
+            if (!statusFilter.includes('All') && !statusFilter.includes(status)) return false;
 
             // Global Dashboard Date Range Filter
             if (dateRange) {
@@ -315,13 +356,11 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRa
 
             return true;
         });
-    }, [rawPlans, assetFilter, statusFilter, startDateFilter, endDateFilter, dateRange]);
+    }, [rawPlans, assetFilter, statusFilter, dateRange]);
 
     const clearFilters = () => {
-        setAssetFilter('All');
-        setStatusFilter('All');
-        setStartDateFilter('');
-        setEndDateFilter('');
+        setAssetFilter(['All']);
+        setStatusFilter(['All']);
     };
 
     return (
@@ -337,6 +376,7 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRa
                             label="Asset Class"
                             value={assetFilter}
                             onChange={setAssetFilter}
+                            multi={true}
                             options={[
                                 { label: 'All', value: 'All' },
                                 { label: 'Equity', value: 'Equity' },
@@ -349,23 +389,10 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRa
                         />
 
                         <CustomSelect
-                            label="Start Month"
-                            value={startDateFilter}
-                            onChange={setStartDateFilter}
-                            options={startMonthOptions}
-                        />
-
-                        <CustomSelect
-                            label="End Month"
-                            value={endDateFilter}
-                            onChange={setEndDateFilter}
-                            options={endMonthOptions}
-                        />
-
-                        <CustomSelect
                             label="Status"
                             value={statusFilter}
                             onChange={setStatusFilter}
+                            multi={true}
                             options={[
                                 { label: 'All', value: 'All' },
                                 { label: 'Pending', value: 'Pending' },
@@ -377,7 +404,7 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRa
                             ]}
                         />
 
-                        {(assetFilter !== 'All' || statusFilter !== 'All' || startDateFilter || endDateFilter) && (
+                        {(!assetFilter.includes('All') || !statusFilter.includes('All')) && (
                             <button className="clear-filters" onClick={clearFilters}>
                                 Clear Filters
                             </button>

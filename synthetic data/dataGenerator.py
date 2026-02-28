@@ -211,10 +211,18 @@ def generate_financial_data():
         
         address_selection = np.random.choice(['Local', 'Overseas'], p=[0.8, 0.2])
 
+        client_last_name = fake.last_name()
+        client_first_name = fake.first_name_male() if gender == 'Male' else fake.first_name_female()
+        client_full_name = f"{client_first_name} {client_last_name}"
+        
+        # Determine father's surname for children logic
+        # If client is male, he is the father. If female, we'll determine/generate husband's name later if married.
+        household_father_surname = client_last_name if gender == 'Male' else None
+
         clients.append({
             'client_id': c_id,
             'title': title,
-            'name_as_per_id': fake.name(),
+            'name_as_per_id': client_full_name,
             'gender': gender,
             'date_of_birth': dob,
             'age': client_age,
@@ -261,10 +269,19 @@ def generate_financial_data():
             s_age = max(18, s_age)
             s_gender = 'Female' if gender == 'Male' else 'Male'
             s_dob = DATE_TODAY - timedelta(days=s_age * 365 + np.random.randint(0, 365))
+            s_first_name = fake.first_name_male() if s_gender == 'Male' else fake.first_name_female()
+            
+            # Realism: Wife often has her own surname on IC. Husband provides surname for children.
+            if s_gender == 'Male':
+                s_last_name = fake.last_name()
+                household_father_surname = s_last_name
+            else:
+                s_last_name = fake.last_name() # Maiden name
+            
             client_family_list.append({
                 'family_member_id': str(uuid.uuid4()),
                 'client_id': c_id,
-                'family_member_name': fake.name(),
+                'family_member_name': f"{s_first_name} {s_last_name}",
                 'gender': s_gender,
                 'relationship': 'Spouse',
                 'date_of_birth': s_dob,
@@ -274,20 +291,26 @@ def generate_financial_data():
             })
         
         # Children (if of child-bearing age)
-        if 25 < client_age:
-            num_children = np.random.randint(0, 4)
+        if 25 < client_age and np.random.random() < 0.5:
+            num_children = np.random.randint(1, 4)
             for _ in range(num_children):
                 c_age = np.random.randint(0, max(1, client_age - 20))
                 c_dob = DATE_TODAY - timedelta(days=c_age * 365 + np.random.randint(0, 365))
+                c_gender = np.random.choice(['Male', 'Female'])
+                c_first_name = fake.first_name_male() if c_gender == 'Male' else fake.first_name_female()
+                
+                # If no father identified (e.g. spouse doesn't exist/unmarried female), follow mother's surname
+                f_name = household_father_surname if household_father_surname else client_last_name
+                
                 client_family_list.append({
                     'family_member_id': str(uuid.uuid4()),
                     'client_id': c_id,
-                    'family_member_name': fake.name(),
-                    'gender': np.random.choice(['Male', 'Female']),
+                    'family_member_name': f"{c_first_name} {f_name}",
+                    'gender': c_gender,
                     'relationship': 'Child',
                     'date_of_birth': c_dob,
                     'age': c_age,
-                    'monthly_upkeep': round(np.random.choice([0, 100, 200, 300, 400, 500]), 2),
+                    'monthly_upkeep': round(np.random.choice([100, 200, 300, 400, 500]), 2),
                     'support_until_age': 21 if np.random.random() < 0.8 else np.random.randint(22, 26) # Support until graduation
                 })
 
@@ -298,11 +321,13 @@ def generate_financial_data():
                 p_age = client_age + np.random.randint(25, 45)
                 p_age = min(95, p_age)
                 p_dob = DATE_TODAY - timedelta(days=p_age * 365 + np.random.randint(0, 365))
+                p_gender = np.random.choice(['Male', 'Female'])
+                p_first_name = fake.first_name_male() if p_gender == 'Male' else fake.first_name_female()
                 client_family_list.append({
                     'family_member_id': str(uuid.uuid4()),
                     'client_id': c_id,
-                    'family_member_name': fake.name(),
-                    'gender': np.random.choice(['Male', 'Female']),
+                    'family_member_name': f"{p_first_name} {client_last_name}",
+                    'gender': p_gender,
                     'relationship': 'Parent',
                     'date_of_birth': p_dob,
                     'age': p_age,

@@ -2,6 +2,7 @@ import { GoogleGenAI, Type, ThinkingLevel } from '@google/genai';
 
 export interface RiskAnalysisParams {
   riskProfileCategory: string;
+  riskProfileDescription: string;
   investmentAllocation: string;
   cashflow: string;
   plansHeld: string;
@@ -49,6 +50,7 @@ async function* baseGenerateStream(params: RiskAnalysisParams, schema: any, outp
       parts: [
         {
           text: `Risk Profile Category: ${params.riskProfileCategory}
+- Risk Profile Description: ${params.riskProfileDescription}
 - Investment Allocation: ${params.investmentAllocation}
 - Cashflow: ${params.cashflow}
 - Plans Held: ${params.plansHeld}`,

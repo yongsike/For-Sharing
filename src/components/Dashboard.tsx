@@ -16,6 +16,10 @@ const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(!!clientId);
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
+    const [riskAnalysisCache, setRiskAnalysisCache] = useState<Record<string, {
+        overview?: string;
+        focused?: any;
+    }>>({});
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newStart = e.target.value;
@@ -45,7 +49,7 @@ const Dashboard: React.FC = () => {
                     .from('clients')
                     .select(`
                         *,
-                        client_family (count),
+                        client_family (*),
                         client_investments (
                             *,
                             investment_valuations (
@@ -87,7 +91,7 @@ const Dashboard: React.FC = () => {
 
                 if (data) {
                     // Map new schema to old structure for backward compatibility with child components
-                    data.family_members_count = data.client_family?.[0]?.count || 0;
+                    data.family_members_count = data.client_family?.length || 0;
                     data.full_name = data.name_as_per_id;
 
                     const mappedInvestments = (data.client_investments || []).map((inv: any) => ({
@@ -129,6 +133,7 @@ const Dashboard: React.FC = () => {
                 setLoading(false);
             }
         };
+
         fetchClientData();
     }, [clientId]);
 
@@ -163,6 +168,14 @@ const Dashboard: React.FC = () => {
 
     const dateRange = { startDate, endDate };
 
+    const handleRiskCacheUpdate = (update: { overview?: string; focused?: any }) => {
+        if (!clientId) return;
+        setRiskAnalysisCache(prev => ({
+            ...prev,
+            [clientId]: { ...(prev[clientId] || {}), ...update }
+        }));
+    };
+
     const renderFullGrid = () => (
         <main className="dashboard-grid">
             <Link to={`/${clientId}/asset-allocation`} className="quadrant-link">
@@ -175,7 +188,14 @@ const Dashboard: React.FC = () => {
                 <PlansHeld client={client} mode="overview" dateRange={dateRange} />
             </Link>
             <Link to={`/${clientId}/risk`} className="quadrant-link">
-                <RiskProfile clientId={clientId} client={client} mode="overview" dateRange={dateRange} />
+                <RiskProfile
+                    clientId={clientId}
+                    client={client}
+                    mode="overview"
+                    dateRange={dateRange}
+                    cache={riskAnalysisCache[clientId!]}
+                    onCacheUpdate={handleRiskCacheUpdate}
+                />
             </Link>
         </main>
     );
@@ -185,7 +205,16 @@ const Dashboard: React.FC = () => {
             case 'asset-allocation': return <AssetAllocation client={client} dateRange={dateRange} />;
             case 'cashflow': return <Cashflow client={client} mode="focused" dateRange={dateRange} />;
             case 'plans': return <PlansHeld client={client} mode="focused" dateRange={dateRange} />;
-            case 'risk': return <RiskProfile clientId={clientId} client={client} mode="focused" dateRange={dateRange} />;
+            case 'risk': return (
+                <RiskProfile
+                    clientId={clientId}
+                    client={client}
+                    mode="focused"
+                    dateRange={dateRange}
+                    cache={riskAnalysisCache[clientId!]}
+                    onCacheUpdate={handleRiskCacheUpdate}
+                />
+            );
             default: return null;
         }
     };
@@ -196,44 +225,20 @@ const Dashboard: React.FC = () => {
                 client={client}
                 showBack={isFocused}
                 onBack={() => navigate(`/${clientId}`)}
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={handleStartDateChange}
+                onEndDateChange={handleEndDateChange}
+                onClearDates={() => { setStartDate(''); setEndDate(''); }}
             />
-            {/* Date Range Filter */}
-            <div className="filter-bar animate-fade" style={{ marginTop: '0', marginBottom: '1.5rem', padding: '1rem 1.5rem' }}>
-                <div className="filter-group">
-                    <label>Start Date</label>
-                    <input
-                        type="date"
-                        className="filter-input"
-                        style={{ minWidth: '150px' }}
-                        value={startDate}
-                        onChange={handleStartDateChange}
-                    />
-                </div>
-                <div className="filter-group">
-                    <label>End Date</label>
-                    <input
-                        type="date"
-                        className="filter-input"
-                        style={{ minWidth: '150px' }}
-                        value={endDate}
-                        onChange={handleEndDateChange}
-                    />
-                </div>
-                {(startDate || endDate) && (
-                    <button
-                        className="clear-filters"
-                        onClick={() => { setStartDate(''); setEndDate(''); }}
-                    >
-                        Clear Dates
-                    </button>
-                )}
-            </div>
             {isFocused ? (
-                <main className="focused-view">
+                <main className="focused-view" style={{ marginTop: '1.5rem' }}>
                     {renderFocusedQuadrant()}
                 </main>
             ) : (
-                renderFullGrid()
+                <div style={{ marginTop: '1.5rem' }}>
+                    {renderFullGrid()}
+                </div>
             )}
         </div>
     );
