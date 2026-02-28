@@ -38,12 +38,16 @@ const Navbar: React.FC = () => {
                 try {
                     const { data, error } = await supabase
                         .from('clients')
-                        .select('client_id, full_name')
-                        .ilike('full_name', `${searchQuery}%`)
+                        .select('client_id, name_as_per_id')
+                        .ilike('name_as_per_id', `${searchQuery}%`)
                         .limit(5)
 
                     if (!error && data) {
-                        setResults(data)
+                        const mappedData = data.map(item => ({
+                            client_id: item.client_id,
+                            full_name: item.name_as_per_id
+                        }))
+                        setResults(mappedData)
                         setShowResults(true)
                     }
                 } catch (err) {

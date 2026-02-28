@@ -7,194 +7,449 @@ from datetime import datetime, timedelta
 fake = Faker()
 
 # Configuration
-NUM_CLIENTS = 10
+NUM_CLIENTS = 20
 
 def generate_financial_data():
     clients = []
-    plans = []
+    investments = []
+    insurance = []
     investment_valuations = []
     insurance_valuations = []
     cashflows = []
+    family = []
 
-    investment_classes = ['Equity', 'Fixed Income', 'Cash']
-    insurance_classes = ['Life Insurance', 'Health Insurance', 'General Insurance']
-    asset_classes = investment_classes + insurance_classes
-    
+    investment_types = ['Equity', 'Fixed Income', 'Cash']
+    insurance_types = ['Life Insurance', 'Health Insurance', 'General Insurance']
     plan_statuses = ['Pending', 'Active', 'Lapsed', 'Matured', 'Settled', 'Void']
+    frequencies = ['Monthly', 'Quarterly', 'Semi-Annual', 'Annual']
+    freq_map = {'Monthly': 12, 'Quarterly': 4, 'Semi-Annual': 2, 'Annual': 1}
+    life_assured_options = ['Self', 'Spouse', 'Child', 'Parent']
+    benefit_types = ['Critical Illness', 'Accidental', 'Hospitalization', 'Death', 'Total Permanent Disability']
     occupations = ['Software Engineer', 'Doctor', 'Teacher', 'Accountant', 'Lawyer', 'Artist', 'Unemployed', 'Retired', 'Business Owner', 'Student']
     marital_statuses = ['Single', 'Married', 'Divorced', 'Widowed']
-    risk_profiles = ['Conservative', 'Balanced', 'Aggressive']
+    risk_profiles = ['Level 1', 'Level 2', 'Level 3', 'Level 4']
+    investment_keywords = ['Alpha', 'Global', 'Dividend', 'Strategic', 'ESG', 'Growth', 'Balanced', 'Pioneer', 'Horizon', 'Vantage']
+    insurance_keywords = ['Life', 'Health', 'Shield', 'Total Care', 'Term', 'Legacy', 'Wellness', 'Secure', 'Supreme', 'Essential']
 
     DATE_TODAY = datetime.now().date()
 
     for _ in range(NUM_CLIENTS):
         c_id = str(uuid.uuid4())
+        # 1. Core Profile Generation (Age & Occupation first)
         client_age = np.random.randint(18, 85)
         
-        # Determine the maximum history we can generate for this client (max 6 years, but not before age 18)
-        max_history_days = min(365 * 6, (client_age - 18) * 365)
+        if client_age < 23:
+            occ = np.random.choice(['Student', 'Software Engineer', 'Artist', 'Unemployed'], p=[0.6, 0.1, 0.1, 0.2])
+        elif client_age > 65:
+            occ = np.random.choice(['Retired', 'Business Owner', 'Consultant'], p=[0.7, 0.2, 0.1])
+        else:
+            occ = np.random.choice(occupations)
 
-        # Step 1: Generate Plans first to establish the timeline
-        client_plans = []
+        # Salary based on Occupation
+        if occ == 'Unemployed':
+            base_salary = 0
+        elif occ in ['Student', 'Retired']:
+            base_salary = np.random.uniform(0, 1500) # Pension or odd jobs
+        else:
+            base_salary = np.random.uniform(4000, 15000)
+
+        # Property Status (Scaled to income)
+        has_property = (occ not in ['Student', 'Unemployed'] and client_age > 25 and np.random.random() < 0.6)
+        # Rent/Mortgage is usually 20-40% of base salary
+        housing_ratio = np.random.uniform(0.2, 0.4)
+        client_rent = round(base_salary * housing_ratio, 2) if (has_property and np.random.random() < 0.3) else 0
+        client_mortgage = round(base_salary * housing_ratio, 2) if (has_property and np.random.random() < 0.6) else 0
+        mortgage_end_year = np.random.randint(1, 10)
+
+        max_history_days = min(365 * 10, (client_age - 18) * 365)
         simulation_start = DATE_TODAY
-        
-        for i in range(np.random.randint(3, 10)):
+
+        client_investments_list = []
+        client_insurance_list = []
+
+        # 2. Generate Investment Plans
+        for _ in range(np.random.randint(2, 5)):
             p_id = str(uuid.uuid4())
-            a_class = np.random.choice(asset_classes)
-            status = np.random.choice(plan_statuses, p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05])
-            
-            # Start date is constrained by their age
+            p_type = np.random.choice(investment_types)
+            status = np.random.choice(plan_statuses, p=[0.05, 0.8, 0.05, 0.0, 0.05, 0.05])
+
             plan_start_date = DATE_TODAY - timedelta(days=np.random.randint(0, max_history_days + 1))
-
-            if plan_start_date < simulation_start:
-                simulation_start = plan_start_date
-
-            if status in ['Matured', 'Settled', 'Void', 'Lapsed']:
-                plan_end_date = plan_start_date + timedelta(days=np.random.randint(90, 365*3))
-                if plan_end_date > DATE_TODAY: plan_end_date = DATE_TODAY
+            if plan_start_date < simulation_start: simulation_start = plan_start_date
+            
+            if status in ['Lapsed', 'Void']:
+                expiry_date = plan_start_date + timedelta(days=np.random.randint(30, 365*2))
+                if expiry_date > DATE_TODAY: expiry_date = DATE_TODAY
             else:
-                plan_end_date = None
+                expiry_date = plan_start_date + timedelta(days=np.random.randint(365, 365*10))
+                if expiry_date <= DATE_TODAY and status in ['Active', 'Pending']:
+                    status = 'Matured'
 
-            if a_class in investment_classes:
-                tag = np.random.choice(['Strategic', 'Diversified', 'Global', 'Core', 'Principal', 'Portfolio'])
-                p_name = f"{fake.company()} {tag} Fund"
-            else:
-                tag = np.random.choice(['Protector', 'Comprehensive', 'Classic', 'Secure', 'Essential', 'Plus'])
-                p_name = f"{fake.company()} {tag} Plan"
+            tag = np.random.choice(investment_keywords)
+            p_name = f"{fake.company()} {tag} Fund"
+            
+            # Investments take 3-10% of salary
+            inv_ratio = np.random.uniform(0.03, 0.10)
+            cont_amt = round(base_salary * inv_ratio, 2) if base_salary > 0 else 0
+            cont_freq = np.random.choice(frequencies) if cont_amt > 0 else None
+            init_inv = round(base_salary * np.random.uniform(2, 6), 2) if base_salary > 0 else 5000
 
-            plan_obj = {
-                'plan_id': p_id,
+            inv_obj = {
+                'policy_id': p_id,
                 'client_id': c_id,
-                'plan_name': p_name,
-                'asset_class': a_class,
+                'policy_name': p_name,
+                'policy_type': p_type,
+                'initial_investment': round(init_inv, 2),
+                'contribution_amount': round(cont_amt, 2),
+                'contribution_frequency': cont_freq,
                 'start_date': plan_start_date,
-                'end_date': plan_end_date,
-                'status': status,
-                'init_mkt_val': np.random.uniform(5000, 100000),
-                'death_benefit': round(np.random.uniform(100000, 1000000), 2),
-                'init_cash_val': 0,
-                'ci_benefit': round(np.random.uniform(50000, 200000), 2),
-                'disability_benefit': round(np.random.uniform(50000, 200000), 2),
-                'cash_growth': round(np.random.uniform(1000, 2000), 2)
+                'expiry_date': expiry_date,
+                'status': status
             }
-            client_plans.append(plan_obj)
-            plans.append({k: plan_obj[k] for k in ['plan_id', 'client_id', 'plan_name', 'asset_class', 'start_date', 'end_date', 'status']})
+            investments.append(inv_obj)
+            client_investments_list.append(inv_obj)
 
-        # Step 2: Generate Master Timeline (Meetings + Sales Events)
-        sales_dates = [p_obj['start_date'] for p_obj in client_plans]
-        
-        periodic_dates = []
+        # 3. Generate Insurance Policies
+        for _ in range(np.random.randint(2, 5)):
+            p_id = str(uuid.uuid4())
+            p_type = np.random.choice(insurance_types, p=[0.5, 0.25, 0.25])
+            status = np.random.choice(plan_statuses, p=[0.05, 0.8, 0.05, 0.0, 0.05, 0.05])
+
+            plan_start_date = DATE_TODAY - timedelta(days=np.random.randint(0, max_history_days + 1))
+            if plan_start_date < simulation_start: simulation_start = plan_start_date
+
+            if status in ['Lapsed', 'Void']:
+                expiry_date = plan_start_date + timedelta(days=np.random.randint(30, 365*2))
+                if expiry_date > DATE_TODAY: expiry_date = DATE_TODAY
+            else:
+                expiry_date = plan_start_date + timedelta(days=np.random.randint(365, 365*10))
+                if expiry_date <= DATE_TODAY and status in ['Active', 'Pending']:
+                    status = 'Matured'
+            
+            tag = np.random.choice(insurance_keywords)
+            p_name = f"{fake.company()} {tag} Plan"
+
+            # Insurance premiums take 1-4% of salary
+            ins_ratio = np.random.uniform(0.01, 0.04)
+            premium = round(base_salary * ins_ratio, 2) if base_salary > 0 else 100
+            
+            # Sum assured is usually 5-10x annual salary
+            sum_assured = round(base_salary * 12 * np.random.uniform(5, 10), 2) if base_salary > 0 else 100000
+
+            ins_obj = {
+                'policy_id': p_id,
+                'client_id': c_id,
+                'policy_name': p_name,
+                'policy_type': p_type,
+                'benefit_type': np.random.choice(benefit_types),
+                'sum_assured': sum_assured,
+                'premium_amount': round(premium, 2),
+                'payment_frequency': np.random.choice(frequencies),
+                'payment_term': np.random.randint(5, 30),
+                'life_assured': np.random.choice(life_assured_options),
+                'start_date': plan_start_date,
+                'expiry_date': expiry_date,
+                'status': status
+            }
+            insurance.append(ins_obj)
+            client_insurance_list.append(ins_obj)
+
+        # Generate Master Timeline
+        event_dates = [p['start_date'] for p in client_investments_list + client_insurance_list]
         current_meeting = simulation_start
-        while current_meeting <= DATE_TODAY:
-            periodic_dates.append(current_meeting)
-            current_meeting += timedelta(days=np.random.randint(90, 365))
+        client_risk = np.random.choice(risk_profiles, p=[0.1, 0.4, 0.4, 0.1])
 
-        # Combine, sort, and deduplicate all event dates
-        all_meeting_dates = sorted(list(set(sales_dates + periodic_dates)))
+        # Demographic generation
+        gender = np.random.choice(['Male', 'Female'])
+        title = 'Mr.' if gender == 'Male' else np.random.choice(['Ms.', 'Mrs.'])
+        dob = DATE_TODAY - timedelta(days=client_age * 365 + np.random.randint(0, 365))
+        
+        # Consolidated Demographic Logic
+        if np.random.random() < 0.7:
+            nationality = 'Singaporean'
+            singapore_pr = 'No'
+            id_type = 'NRIC'
+            fin_no = None
+            fin_expiry = None
+        else:
+            nationality = fake.country()
+            # If not Singaporean, could be PR or Foreigner
+            if np.random.random() < 0.4:
+                singapore_pr = 'Yes'
+                id_type = 'NRIC'
+                fin_no = None
+                fin_expiry = None
+            else:
+                singapore_pr = 'No'
+                id_type = 'Passport'
+                # Foreigners in SG have a FIN (Foreign Identification Number)
+                fin_no = fake.bothify(text='?#######?').upper() # F/G prefix usually
+                fin_expiry = DATE_TODAY + timedelta(days=np.random.randint(180, 730))
 
-        # Update client profile with the date of the most recent recorded event
-        last_upd = all_meeting_dates[-1] if all_meeting_dates else (DATE_TODAY - timedelta(days=np.random.randint(1, 180)))
+        id_expiry = None if id_type == 'NRIC' else DATE_TODAY + timedelta(days=np.random.randint(365, 3650))
+        
+        # Written subset of spoken
+        all_langs = ['English', 'Mandarin', 'Malay', 'Tamil', 'Hokkien', 'Cantonese']
+        if np.random.random() < 0.8:
+            spoken_list = ['English'] + np.random.choice([l for l in all_langs if l != 'English'], size=np.random.randint(0, 3), replace=False).tolist()
+        else:
+            spoken_list = np.random.choice(all_langs, size=np.random.randint(1, 4), replace=False).tolist()
+        written_candidates = [l for l in spoken_list if l in ['English', 'Mandarin', 'Malay', 'Tamil']]
+        if not written_candidates:
+            written_list = [np.random.choice(['English', 'Mandarin'])]
+        else:
+            written_list = np.random.choice(written_candidates, size=np.random.randint(1, len(written_candidates) + 1), replace=False).tolist()
+
+        # Format arrays for Postgres CSV consumption
+        spoken_pg = "{" + ",".join(sorted(spoken_list)) + "}"
+        written_pg = "{" + ",".join(sorted(written_list)) + "}"
+
+        # Employment Status logic
+        if occ in ['Student', 'Unemployed', 'Retired']:
+            emp_status = occ
+        else:
+            emp_status = np.random.choice(['Full-time', 'Part-time', 'Contract', 'Self-employed', 'Freelance'], p=[0.7, 0.1, 0.05, 0.1, 0.05])
+        
+        address_selection = np.random.choice(['Local', 'Overseas'], p=[0.8, 0.2])
 
         clients.append({
             'client_id': c_id,
-            'full_name': fake.name(),
+            'title': title,
+            'name_as_per_id': fake.name(),
+            'gender': gender,
+            'date_of_birth': dob,
             'age': client_age,
-            'occupation': np.random.choice(occupations),
+            'smoker_status': np.random.choice(["Non-smoker", "Smoker"], p=[0.8, 0.2]),
+            'race': np.random.choice(['Chinese', 'Malay', 'Indian', 'Caucasian', 'Others']),
             'marital_status': np.random.choice(marital_statuses),
-            'family_members_count': np.random.randint(0, 6),
-            'risk_profile': np.random.choice(risk_profiles),
-            'last_updated': last_upd
+            'qualification': np.random.choice(['Bachelors', 'Masters', 'PhD', 'Diploma', 'A-Levels', 'O-Levels', 'None']),
+            'nationality': nationality,
+            'singapore_pr': singapore_pr,
+            'id_type': id_type,
+            'id_no': fake.bothify(text='?#######?').upper(),
+            'id_expiry_date': id_expiry,
+            'fin_no': fin_no,
+            'fin_expiry_date': fin_expiry,
+            'languages_spoken': spoken_pg,
+            'languages_written': written_pg,
+            'email': fake.email(),
+            'mobile_no': fake.numerify(text='8#######'),
+            'home_no': fake.numerify(text='6#######') if np.random.random() < 0.5 else None,
+            'office_no': fake.numerify(text='6#######') if np.random.random() < 0.3 else None,
+            'occupation': occ,
+            'employment_status': emp_status,
+            'address_type': address_selection,
+            'postal_district': fake.numerify(text='######'),
+            'house_block_no': fake.building_number(),
+            'street_name': fake.street_name(),
+            'building_name': f"{np.random.choice(['Ocean', 'Sky', 'Garden', 'Green', 'Royal', 'Grand', 'Silver', 'Golden', 'Regency', 'Park', 'River', 'High'] if np.random.random() < 0.7 else [fake.last_name() for _ in range(5)])} {np.random.choice(['View', 'Suites', 'Gardens', 'Residences', 'Point', 'Towers', 'Apartments', 'Heights', 'Plaza', 'Court'])}",
+            'unit_no': f"#{np.random.randint(1, 50):02d}-{np.random.randint(1, 100):02d}",
+            'risk_profile': client_risk,
+            'last_updated': DATE_TODAY
         })
 
-        # Step 3: For each event date, capture Cashflow AND all Plan Valuations
-        base_salary = np.random.uniform(3000, 15000)
-        base_expenses = base_salary * np.random.uniform(0.3, 0.7)
+        # Stable Investment Income (Linked to Portfolio Size)
+        # Assume ~2-4% dividend yield per year, converted to monthly income
+        total_initial_capital = sum(p['initial_investment'] for p in client_investments_list)
+        yield_rate = np.random.uniform(0.02, 0.04)
+        client_inv_income = round((total_initial_capital * yield_rate) / 12, 2) if total_initial_capital > 0 else 0
+
+        # Family Generation
+        client_family_list = []
+        # Spouse
+        if clients[-1]['marital_status'] == 'Married':
+            s_age = client_age + np.random.randint(-5, 5)
+            s_age = max(18, s_age)
+            s_gender = 'Female' if gender == 'Male' else 'Male'
+            s_dob = DATE_TODAY - timedelta(days=s_age * 365 + np.random.randint(0, 365))
+            client_family_list.append({
+                'family_member_id': str(uuid.uuid4()),
+                'client_id': c_id,
+                'family_member_name': fake.name(),
+                'gender': s_gender,
+                'relationship': 'Spouse',
+                'date_of_birth': s_dob,
+                'age': s_age,
+                'monthly_upkeep': 0, # Usually no upkeep for spouse in this context
+                'support_until_age': None
+            })
+        
+        # Children (if of child-bearing age)
+        if 25 < client_age:
+            num_children = np.random.randint(0, 4)
+            for _ in range(num_children):
+                c_age = np.random.randint(0, max(1, client_age - 20))
+                c_dob = DATE_TODAY - timedelta(days=c_age * 365 + np.random.randint(0, 365))
+                client_family_list.append({
+                    'family_member_id': str(uuid.uuid4()),
+                    'client_id': c_id,
+                    'family_member_name': fake.name(),
+                    'gender': np.random.choice(['Male', 'Female']),
+                    'relationship': 'Child',
+                    'date_of_birth': c_dob,
+                    'age': c_age,
+                    'monthly_upkeep': round(np.random.choice([0, 100, 200, 300, 400, 500]), 2),
+                    'support_until_age': 21 if np.random.random() < 0.8 else np.random.randint(22, 26) # Support until graduation
+                })
+
+        # Parents
+        if 25 < client_age < 65 and np.random.random() < 0.5:
+            num_parents = np.random.randint(1, 3)
+            for _ in range(num_parents):
+                p_age = client_age + np.random.randint(25, 45)
+                p_age = min(95, p_age)
+                p_dob = DATE_TODAY - timedelta(days=p_age * 365 + np.random.randint(0, 365))
+                client_family_list.append({
+                    'family_member_id': str(uuid.uuid4()),
+                    'client_id': c_id,
+                    'family_member_name': fake.name(),
+                    'gender': np.random.choice(['Male', 'Female']),
+                    'relationship': 'Parent',
+                    'date_of_birth': p_dob,
+                    'age': p_age,
+                    'monthly_upkeep': round(np.random.choice([0, 100, 200, 300, 400, 500]), 2),
+                    'support_until_age': np.random.choice([70, 75, 80, 85, 90, 95])
+                })
+
+        family.extend(client_family_list)
+        total_upkeep = sum(f['monthly_upkeep'] for f in client_family_list)
+        # Generate Master Timeline (Include Starts AND Expiries)
+        event_dates = [p['start_date'] for p in client_investments_list + client_insurance_list]
+        event_dates += [p['expiry_date'] for p in client_investments_list + client_insurance_list if p['expiry_date'] <= DATE_TODAY]
+        
+        current_meeting = simulation_start
+        while current_meeting <= DATE_TODAY:
+            event_dates.append(current_meeting)
+            current_meeting += timedelta(days=np.random.randint(90, 365))
+        
+        all_meeting_dates = sorted(list(set(event_dates)))
+        last_date = all_meeting_dates[-1]
+        clients[-1]['last_updated'] = last_date
+        for f in client_family_list:
+            f['last_updated'] = last_date
 
         for meeting_date in all_meeting_dates:
-            # 3% annual salary growth
             years_from_start = (meeting_date - simulation_start).days / 365.25
-            current_base_salary = base_salary * (1.03 ** years_from_start)
+            current_salary = base_salary * (1.03 ** years_from_start)
 
-            # Inflows
-            employment_income_gross = round(current_base_salary * np.random.uniform(0.98, 1.02), 2)
-            has_rental = np.random.choice([0, 1], p=[0.8, 0.2])
-            rental_income = round(np.random.uniform(1000, 3000), 2) if has_rental else 0
-            investment_income = round(np.random.uniform(0, 1500), 2)
+            # Employee CPF Rates (only this affects take-home cashflow)
+            cpf_rate = 0.20
+            if client_age > 70: cpf_rate = 0.05
+            elif client_age > 65: cpf_rate = 0.075
+            elif client_age > 60: cpf_rate = 0.1
+            elif client_age > 55: cpf_rate = 0.125
+
+            # Effective Tax Rate
+            tax_rate = 0
+            if current_salary > 8000: tax_rate = 0.08
+            elif current_salary > 4000: tax_rate = 0.04
+            elif current_salary > 2500: tax_rate = 0.01
+
+            # Investment Income Growth (Gradual 4% CAGR)
+            current_inv_income = client_inv_income * (1.04 ** years_from_start)
             
-            # Expenses
-            household_expenses = round(base_expenses * np.random.uniform(0.4, 0.7), 2)
-            income_tax = round(employment_income_gross * np.random.uniform(0.05, 0.15), 2)
-            insurance_premiums = round(base_expenses * np.random.uniform(0.1, 0.2), 2)
-            property_expenses = round(base_expenses * np.random.uniform(0.1, 0.2), 2)
-            has_property_loan = np.random.choice([0, 1], p=[0.8, 0.2])
-            property_loan_repayment = round(np.random.uniform(100, 1000), 2) if has_property_loan else 0
-            has_non_property_loan = np.random.choice([0, 1], p=[0.8, 0.2])
-            non_property_loan_repayment = round(np.random.uniform(100, 300), 2) if has_non_property_loan else 0
+            # Lifestyle Expenses linked to CURRENT salary
+            current_household_expenses = 500 + (len(client_family_list) * 200) + (current_salary * 0.1) + total_upkeep
+
+            # No mortgages for students/unemployed/under-25s usually
+            current_p_loan = client_mortgage if years_from_start < mortgage_end_year else 0
+            p_expenses = (current_household_expenses * 0.2) if (has_property or np.random.random() < 0.2) else 0
             
-            # Wealth Transfers
-            cpf_contribution_total = round(min(employment_income_gross, 8000) * 0.37, 2) # cap CPF
-            regular_investments = round(employment_income_gross * np.random.uniform(0, 0.25), 2)
+            # If they are a landlord, they definitely have property expenses
+            if client_rent > 0: p_expenses = max(p_expenses, 300) 
+
+            # Only pay if the plan has started AND hasn't expired
+            def get_monthly_normalized_amt(p, current_date, amt_key, freq_key):
+                if not (p['start_date'] <= current_date <= p['expiry_date']):
+                    return 0
+                if 'payment_term' in p:
+                    years_since_start = (current_date - p['start_date']).days / 365.25
+                    if years_since_start > p['payment_term']:
+                        return 0
+                amt = p.get(amt_key, 0)
+                freq = p.get(freq_key)
+                if not freq or amt == 0: return 0
+                return amt * freq_map[freq] / 12
+
+            insurance_total = sum(get_monthly_normalized_amt(p, meeting_date, 'premium_amount', 'payment_frequency') for p in client_insurance_list)
+            investment_total = sum(get_monthly_normalized_amt(p, meeting_date, 'contribution_amount', 'contribution_frequency') for p in client_investments_list)
+
+            # Rental Income Growth (2% CAGR) + Noise
+            current_rental_income = client_rent * (1.02 ** years_from_start)
+            if current_rental_income > 0:
+                current_rental_income *= (1 + np.random.uniform(-0.05, 0.05))
 
             cashflows.append({
                 'cashflow_id': str(uuid.uuid4()),
                 'client_id': c_id,
                 'as_of_date': meeting_date,
-                'employment_income_gross': employment_income_gross,
-                'rental_income': rental_income,
-                'investment_income': investment_income,
-                'household_expenses': household_expenses,
-                'income_tax': income_tax,
-                'insurance_premiums': insurance_premiums,
-                'property_expenses': property_expenses,
-                'property_loan_repayment': property_loan_repayment,
-                'non_property_loan_repayment': non_property_loan_repayment,
-                'cpf_contribution_total': cpf_contribution_total,
-                'regular_investments': regular_investments
+                'employment_income_gross': round(current_salary, 2),
+                'rental_income': round(current_rental_income, 2),
+                'investment_income': round(current_inv_income * (1 + np.random.uniform(-0.3, 0.3)), 2) if current_inv_income > 0 else 0,
+                'household_expenses': round(current_household_expenses, 2),
+                'income_tax': round(current_salary * tax_rate, 2),
+                'insurance_premiums': round(insurance_total, 2),
+                'property_expenses': round(p_expenses * (1 + np.random.uniform(-0.1, 0.1)), 2),
+                'property_loan_repayment': round(current_p_loan, 2),
+                'non_property_loan_repayment': round(current_salary * np.random.uniform(0.05, 0.1), 2) if np.random.random() < 0.3 else 0,
+                'cpf_contribution_total': round(min(current_salary, 8000) * cpf_rate, 2),
+                'regular_investments': round(investment_total, 2)
             })
 
-            for p_obj in client_plans:
-                # Plan must be active on this date
-                is_active = (meeting_date >= p_obj['start_date']) and (p_obj['end_date'] is None or meeting_date <= p_obj['end_date'])
-                
-                if is_active:
-                    years_passed = (meeting_date - p_obj['start_date']).days / 365.25
+            # Investment Valuations
+            for inv in client_investments_list:
+                if inv['start_date'] <= meeting_date and (inv['expiry_date'] is None or meeting_date <= inv['expiry_date']):
+                    years_passed = (meeting_date - inv['start_date']).days / 365.25
                     
-                    if p_obj['asset_class'] in investment_classes:
-                        growth = (1.05 ** years_passed) * (1 + np.random.uniform(-0.1, 0.1))
-                        investment_valuations.append({
-                            'valuation_id': str(uuid.uuid4()),
-                            'plan_id': p_obj['plan_id'],
-                            'as_of_date': meeting_date,
-                            'market_value': round(p_obj['init_mkt_val'] * growth, 2)
-                        })
-                    else:
-                        # Only Life Insurance typically accumulates cash value
-                        cash_growth = p_obj['cash_growth'] * years_passed if p_obj['asset_class'] == 'Life Insurance' else 0
+                    # Calculate total contributions up to this date
+                    total_contributions = 0
+                    if inv['contribution_amount'] > 0:
+                        periods_per_year = freq_map[inv['contribution_frequency']]
+                        total_contributions = inv['contribution_amount'] * (years_passed * periods_per_year)
+                    
+                    capital_invested = inv['initial_investment'] + total_contributions
+                    growth = (1.06 ** years_passed) * (1 + np.random.uniform(-0.05, 0.05))
+
+                    investment_valuations.append({
+                        'valuation_id': str(uuid.uuid4()),
+                        'policy_id': inv['policy_id'],
+                        'as_of_date': meeting_date,
+                        'current_value': round(capital_invested * growth, 2)
+                    })
+
+            # Insurance Valuations (Only Life Insurance)
+            for ins in client_insurance_list:
+                if ins['policy_type'] == 'Life Insurance':
+                    if ins['start_date'] <= meeting_date and (ins['expiry_date'] is None or meeting_date <= ins['expiry_date']):
+                        years_passed = (meeting_date - ins['start_date']).days / 365.25
+                        cash_val = (ins['premium_amount'] * 12 * years_passed * 0.4)
                         insurance_valuations.append({
                             'valuation_id': str(uuid.uuid4()),
-                            'plan_id': p_obj['plan_id'],
+                            'policy_id': ins['policy_id'],
                             'as_of_date': meeting_date,
-                            'death_benefit': p_obj['death_benefit'],
-                            'cash_value': round(p_obj['init_cash_val'] + cash_growth, 2),
-                            'critical_illness_benefit': p_obj['ci_benefit'],
-                            'disability_benefit': p_obj['disability_benefit']
+                            'current_value': round(cash_val, 2)
                         })
 
-    return (pd.DataFrame(clients), pd.DataFrame(plans), 
+    return (pd.DataFrame(clients), pd.DataFrame(investments), pd.DataFrame(insurance),
             pd.DataFrame(investment_valuations), pd.DataFrame(insurance_valuations),
-            pd.DataFrame(cashflows))
+            pd.DataFrame(cashflows), pd.DataFrame(family))
 
-df_clients, df_plans, df_inv_vals, df_ins_vals, df_cash = generate_financial_data()
+# Generate data
+df_clients, df_investments, df_insurance, df_inv_vals, df_ins_vals, df_cash, df_family = generate_financial_data()
 
 # Export to CSVs
 df_clients.to_csv('synthetic data/clients.csv', index=False)
-df_plans.to_csv('synthetic data/client_plans.csv', index=False)
+df_investments.to_csv('synthetic data/client_investments.csv', index=False)
+df_insurance.to_csv('synthetic data/client_insurance.csv', index=False)
 df_inv_vals.to_csv('synthetic data/investment_valuations.csv', index=False)
 df_ins_vals.to_csv('synthetic data/insurance_valuations.csv', index=False)
 df_cash.to_csv('synthetic data/cashflow.csv', index=False)
+df_family.to_csv('synthetic data/client_family.csv', index=False)
 
+print("Data generation complete:")
 print(f"  - clients.csv: {len(df_clients)} rows")
-print(f"  - client_plans.csv: {len(df_plans)} rows")
+print(f"  - client_investments.csv: {len(df_investments)} rows")
+print(f"  - client_insurance.csv: {len(df_insurance)} rows")
 print(f"  - investment_valuations.csv: {len(df_inv_vals)} rows")
 print(f"  - insurance_valuations.csv: {len(df_ins_vals)} rows")
 print(f"  - cashflow.csv: {len(df_cash)} rows")
+print(f"  - client_family.csv: {len(df_family)} rows")

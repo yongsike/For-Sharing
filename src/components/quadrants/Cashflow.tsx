@@ -143,8 +143,8 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
             return (
                 <div style={{ backgroundColor: '#fff', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)', minWidth: '220px' }}>
                     <p style={{ color: 'var(--secondary)', marginBottom: '8px', fontWeight: 600 }}>{data.fullDate}</p>
-                    {visibleLines.inflow && <p style={{ color: '#719266', fontSize: '0.9rem', margin: '4px 0' }}>Total Inflow: <strong>${data.inflow.toLocaleString()}</strong></p>}
-                    {visibleLines.expense && <p style={{ color: '#9B2226', fontSize: '0.9rem', margin: '4px 0' }}>Total Expense: <strong>${data.expense.toLocaleString()}</strong></p>}
+                    {visibleLines.inflow && <p style={{ color: '#719266', fontSize: '0.9rem', margin: '4px 0' }}>Inflow: <strong>${data.inflow.toLocaleString()}</strong></p>}
+                    {visibleLines.expense && <p style={{ color: '#9B2226', fontSize: '0.9rem', margin: '4px 0' }}>Expense: <strong>${data.expense.toLocaleString()}</strong></p>}
                     {visibleLines.wealthTransfers && <p style={{ color: '#3C5A82', fontSize: '0.9rem', margin: '4px 0' }}>Wealth Transfers: <strong>${data.wealthTransfers.toLocaleString()}</strong></p>}
                     {visibleLines.netSurplus && <p style={{ color: '#BC6C25', fontSize: '0.9rem', margin: '4px 0' }}>Net Surplus: <strong>${data.netSurplus.toLocaleString()}</strong></p>}
                     {visibleLines.netCashflow && <p style={{ color: '#C5B358', fontSize: '0.9rem', margin: '4px 0' }}>Net Cashflow: <strong>${data.netCashflow.toLocaleString()}</strong></p>}
@@ -182,7 +182,7 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', marginTop: '0rem' }}>
                                 {[
                                     { key: 'inflow', label: 'Inflow', color: '#719266' },
-                                    { key: 'expense', label: 'Expenses', color: '#9B2226' },
+                                    { key: 'expense', label: 'Expense', color: '#9B2226' },
                                     { key: 'wealthTransfers', label: 'Wealth Transfers', color: '#3C5A82' },
                                     { key: 'netSurplus', label: 'Net Surplus', color: '#BC6C25' },
                                     { key: 'netCashflow', label: 'Net Cashflow', color: '#C5B358' }
@@ -296,9 +296,9 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                             </div>
 
                             <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
-                                {['Inflows', 'Expenses', 'Wealth Transfers'].map((cat) => (
+                                {['Inflows', 'Expense', 'Wealth Transfers'].map((cat) => (
                                     <div key={cat}>
-                                        <h4 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: cat === 'Expenses' ? '#9B2226' : (cat === 'Inflows' ? 'var(--primary)' : '#3C5A82'), marginBottom: '10px', letterSpacing: '0.05em' }}>{cat}</h4>
+                                        <h4 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: cat === 'Expense' ? '#9B2226' : (cat === 'Inflows' ? 'var(--primary)' : '#3C5A82'), marginBottom: '10px', letterSpacing: '0.05em' }}>{cat}</h4>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             {(getPieData(selectedSnapshot) as any)[cat === 'Wealth Transfers' ? 'wealthTransfers' : (cat === 'Inflows' ? 'sources' : 'expenses')].map((item: any, idx: number) => (
                                                 <div

@@ -45,17 +45,18 @@ const Dashboard: React.FC = () => {
                     .from('clients')
                     .select(`
                         *,
-                        client_plans (
+                        client_family (count),
+                        client_investments (
                             *,
                             investment_valuations (
-                                market_value,
+                                current_value,
                                 as_of_date
-                            ),
+                            )
+                        ),
+                        client_insurance (
+                            *,
                             insurance_valuations (
-                                death_benefit,
-                                cash_value,
-                                critical_illness_benefit,
-                                disability_benefit,
+                                current_value,
                                 as_of_date
                             )
                         ),
@@ -84,7 +85,44 @@ const Dashboard: React.FC = () => {
 
                 if (error) throw error;
 
-                setClient(data);
+                if (data) {
+                    // Map new schema to old structure for backward compatibility with child components
+                    data.family_members_count = data.client_family?.[0]?.count || 0;
+                    data.full_name = data.name_as_per_id;
+
+                    const mappedInvestments = (data.client_investments || []).map((inv: any) => ({
+                        ...inv,
+                        plan_id: inv.policy_id,
+                        plan_name: inv.policy_name,
+                        asset_class: inv.policy_type,
+                        start_date: inv.start_date,
+                        end_date: inv.expiry_date,
+                        investment_valuations: (inv.investment_valuations || []).map((v: any) => ({
+                            ...v,
+                            market_value: v.current_value
+                        }))
+                    }));
+
+                    const mappedInsurance = (data.client_insurance || []).map((ins: any) => ({
+                        ...ins,
+                        plan_id: ins.policy_id,
+                        plan_name: ins.policy_name,
+                        asset_class: ins.policy_type,
+                        start_date: ins.start_date,
+                        end_date: ins.expiry_date,
+                        insurance_valuations: (ins.insurance_valuations || []).map((v: any) => ({
+                            ...v,
+                            cash_value: v.current_value,
+                            // Fallbacks for missing benefit columns in new schema
+                            death_benefit: ins.sum_assured || 0,
+                            critical_illness_benefit: 0,
+                            disability_benefit: 0
+                        }))
+                    }));
+
+                    data.client_plans = [...mappedInvestments, ...mappedInsurance];
+                    setClient(data);
+                }
             } catch (err) {
                 console.error('Error fetching comprehensive client data:', err);
             } finally {

@@ -61,7 +61,15 @@ def main():
         cur = conn.cursor()
 
         # 3. Schema Reset
-        tables = ["public.investment_valuations", "public.insurance_valuations", "public.cashflow", "public.client_plans", "public.clients"]
+        tables = [
+            "public.investment_valuations", 
+            "public.insurance_valuations", 
+            "public.cashflow", 
+            "public.client_family", 
+            "public.client_investments", 
+            "public.client_insurance", 
+            "public.clients"
+        ]
         for t in tables:
             cur.execute(f"DROP TABLE IF EXISTS {t} CASCADE;")
         
@@ -73,7 +81,9 @@ def main():
         print("\n--- 3. Repopulating Data ---")
         data_files = [
             ("public.clients", "clients.csv"),
-            ("public.client_plans", "client_plans.csv"),
+            ("public.client_family", "client_family.csv"),
+            ("public.client_investments", "client_investments.csv"),
+            ("public.client_insurance", "client_insurance.csv"),
             ("public.cashflow", "cashflow.csv"),
             ("public.investment_valuations", "investment_valuations.csv"),
             ("public.insurance_valuations", "insurance_valuations.csv")
@@ -81,16 +91,32 @@ def main():
 
         for table, file_name in data_files:
             file_path = os.path.join(synth_dir, file_name)
-            if not os.path.exists(file_path): continue
-        
+            if not os.path.exists(file_path): 
+                print(f"  - Skipping {file_name} (not found)")
+                continue
+    
             df = pd.read_csv(file_path)
             
+            # Force string for columns that might be misinterpreted as numbers
+            text_cols = ['mobile_no', 'home_no', 'office_no', 'id_no', 'fin_no', 'postal_district', 'house_block_no', 'unit_no']
+            for col in text_cols:
+                if col in df.columns:
+                    df[col] = df[col].astype(str).replace('nan', None).replace('None', None)
+
             columns = ",".join(df.columns)
-            rows = [tuple(x) for x in df.where(pd.notnull(df), None).values]
             
-            insert_query = f"INSERT INTO {table} ({columns}) VALUES %s"
-            execute_values(cur, insert_query, rows)
-            print(f"  - Uploaded {len(rows)} rows to {table.replace('public.', '')}.")
+            # Use object conversion to ensure None is preserved and not turned back into NaN by Pandas
+            rows = [tuple(x) for x in df.astype(object).where(pd.notnull(df), None).values]
+            
+            try:
+                insert_query = f"INSERT INTO {table} ({columns}) VALUES %s"
+                execute_values(cur, insert_query, rows)
+                print(f"    Uploaded {len(rows)} rows to {table.replace('public.', '')}.")
+            except Exception as e:
+                print(f"    Error uploading to {table}: {e}")
+                if len(rows) > 0:
+                    print(f"    Sample Row: {rows[0]}")
+                raise e
 
         cur.close()
         conn.close()

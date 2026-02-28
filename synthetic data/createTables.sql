@@ -1,25 +1,92 @@
 CREATE TABLE public.clients (
   client_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  full_name text NOT NULL,
-  age integer CHECK (age >= 0),
-  occupation text,
-  marital_status text,
-  family_members_count integer CHECK (family_members_count >= 0),
-  risk_profile text NOT NULL CHECK (risk_profile IN ('Conservative', 'Balanced', 'Aggressive')),
+  title text NOT NULL CHECK (title IN ('Mr.', 'Ms.', 'Mrs.')),
+  name_as_per_id text NOT NULL,
+  gender text NOT NULL CHECK (gender IN ('Male', 'Female')),
+  date_of_birth date NOT NULL,
+  age integer NOT NULL CHECK (age >= 0),
+  smoker_status text NOT NULL CHECK (smoker_status IN ('Smoker', 'Non-smoker')),
+  race text NOT NULL CHECK (race IN ('Chinese', 'Malay', 'Indian', 'Caucasian', 'Others')),
+  marital_status text NOT NULL CHECK (marital_status IN ('Single', 'Married', 'Divorced', 'Widowed')),
+  qualification text,
+  nationality text NOT NULL,
+  singapore_pr text NOT NULL CHECK (singapore_pr IN ('Yes', 'No')),
+  id_type text NOT NULL CHECK (id_type IN ('NRIC', 'Passport')),
+  id_no text NOT NULL,
+  id_expiry_date date,
+  fin_no text,
+  fin_expiry_date date,
+  languages_spoken text[] NOT NULL,
+  languages_written text[] NOT NULL,
+  email text NOT NULL,
+  mobile_no text NOT NULL,
+  home_no text,
+  office_no text,
+  occupation text NOT NULL,
+  employment_status text NOT NULL CHECK (employment_status IN ('Full-time', 'Part-time', 'Contract', 'Self-employed', 'Freelance', 'Student', 'Unemployed', 'Retired')),
+  address_type text NOT NULL CHECK (address_type IN ('Local', 'Overseas')),
+  postal_district text NOT NULL,
+  house_block_no text NOT NULL,
+  street_name text NOT NULL,
+  building_name text,
+  unit_no text,
+  risk_profile text NOT NULL CHECK (risk_profile IN ('Level 1', 'Level 2', 'Level 3', 'Level 4')),
   last_updated date DEFAULT CURRENT_DATE,
   CONSTRAINT clients_pkey PRIMARY KEY (client_id)
 );
 
-CREATE TABLE public.client_plans (
-  plan_id uuid NOT NULL DEFAULT gen_random_uuid(),
+CREATE TABLE public.client_family (
+  family_member_id uuid NOT NULL DEFAULT gen_random_uuid(),
   client_id uuid NOT NULL,
-  plan_name text NOT NULL,
-  asset_class text NOT NULL CHECK (asset_class IN ('Equity', 'Fixed Income', 'Cash', 'Life Insurance', 'Health Insurance', 'General Insurance')),
+  family_member_name text NOT NULL,
+  gender text NOT NULL CHECK (gender IN ('Male', 'Female')),
+  relationship text NOT NULL CHECK (relationship IN ('Spouse', 'Child', 'Parent')),
+  date_of_birth date NOT NULL,
+  age integer NOT NULL CHECK (age >= 0),
+  monthly_upkeep numeric DEFAULT 0 CHECK (monthly_upkeep >= 0),
+  support_until_age integer CHECK (support_until_age >= 0),
+  years_to_support integer GENERATED ALWAYS AS (
+    CASE 
+      WHEN support_until_age > age THEN support_until_age - age 
+      ELSE 0 
+    END
+  ) STORED,
+  last_updated date DEFAULT CURRENT_DATE,
+  CONSTRAINT client_family_pkey PRIMARY KEY (family_member_id),
+  CONSTRAINT client_family_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(client_id) ON DELETE CASCADE
+);
+
+CREATE TABLE public.client_investments (
+  policy_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  client_id uuid NOT NULL,
+  policy_name text NOT NULL,
+  policy_type text NOT NULL CHECK (policy_type IN ('Equity', 'Fixed Income', 'Cash')),
+  initial_investment numeric DEFAULT 0 CHECK (initial_investment >= 0),
+  contribution_amount numeric DEFAULT 0 CHECK (contribution_amount >= 0),
+  contribution_frequency text CHECK (contribution_frequency IN ('Monthly', 'Quarterly', 'Semi-Annual', 'Annual')),
   start_date date NOT NULL,
-  end_date date,
+  expiry_date date,
   status text NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Active', 'Lapsed', 'Matured', 'Settled', 'Void')),
-  CONSTRAINT client_plans_pkey PRIMARY KEY (plan_id),
-  CONSTRAINT client_plans_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(client_id) ON DELETE CASCADE
+  CONSTRAINT client_investments_pkey PRIMARY KEY (policy_id),
+  CONSTRAINT client_investments_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(client_id) ON DELETE CASCADE
+);
+
+CREATE TABLE public.client_insurance (
+  policy_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  client_id uuid NOT NULL,
+  policy_name text NOT NULL,
+  policy_type text NOT NULL CHECK (policy_type IN ('Life Insurance', 'Health Insurance', 'General Insurance')),
+  benefit_type text,
+  sum_assured numeric DEFAULT 0 CHECK (sum_assured >= 0),
+  premium_amount numeric DEFAULT 0 CHECK (premium_amount >= 0),
+  payment_frequency text CHECK (payment_frequency IN ('Monthly', 'Quarterly', 'Semi-Annual', 'Annual')),
+  payment_term integer CHECK (payment_term >= 0),
+  life_assured text,
+  start_date date NOT NULL,
+  expiry_date date,
+  status text NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Active', 'Lapsed', 'Matured', 'Settled', 'Void')),
+  CONSTRAINT client_insurance_pkey PRIMARY KEY (policy_id),
+  CONSTRAINT client_insurance_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(client_id) ON DELETE CASCADE
 );
 
 CREATE TABLE public.cashflow (
@@ -69,21 +136,18 @@ CREATE TABLE public.cashflow (
 
 CREATE TABLE public.investment_valuations (
   valuation_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  plan_id uuid NOT NULL,
+  policy_id uuid NOT NULL,
   as_of_date date NOT NULL,
-  market_value numeric NOT NULL,
+  current_value numeric NOT NULL DEFAULT 0 CHECK (current_value >= 0),
   CONSTRAINT investment_valuations_pkey PRIMARY KEY (valuation_id),
-  CONSTRAINT investment_valuations_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.client_plans(plan_id) ON DELETE CASCADE
+  CONSTRAINT investment_valuations_policy_id_fkey FOREIGN KEY (policy_id) REFERENCES public.client_investments(policy_id) ON DELETE CASCADE
 );
 
 CREATE TABLE public.insurance_valuations (
   valuation_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  plan_id uuid NOT NULL,
+  policy_id uuid NOT NULL,
   as_of_date date NOT NULL,
-  death_benefit numeric NOT NULL DEFAULT 0 CHECK (death_benefit >= 0),
-  cash_value numeric NOT NULL DEFAULT 0 CHECK (cash_value >= 0),
-  critical_illness_benefit numeric NOT NULL DEFAULT 0 CHECK (critical_illness_benefit >= 0),
-  disability_benefit numeric NOT NULL DEFAULT 0 CHECK (disability_benefit >= 0),
+  current_value numeric NOT NULL DEFAULT 0 CHECK (current_value >= 0),
   CONSTRAINT insurance_valuations_pkey PRIMARY KEY (valuation_id),
-  CONSTRAINT insurance_valuations_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.client_plans(plan_id) ON DELETE CASCADE
+  CONSTRAINT insurance_valuations_policy_id_fkey FOREIGN KEY (policy_id) REFERENCES public.client_insurance(policy_id) ON DELETE CASCADE
 );
