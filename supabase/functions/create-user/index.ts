@@ -50,16 +50,27 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { email, full_name, password, role } = await req.json()
-    if (!email || !full_name || !password) {
+    const body = await req.json()
+    const rawEmail = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
+    const full_name = body?.full_name?.trim()
+    const password = body?.password
+    const role = body?.role
+
+    if (!rawEmail || !full_name || !password) {
       return new Response(JSON.stringify({ error: 'Missing email, full_name, or password' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    if (/\s/.test(rawEmail)) {
+      return new Response(JSON.stringify({ error: 'Email cannot contain spaces' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     const { data: newUser, error } = await adminClient.auth.admin.createUser({
-      email,
+      email: rawEmail,
       password,
       email_confirm: true,
       user_metadata: { full_name, role: role || 'staff', admin: role === 'admin' },

@@ -25,8 +25,13 @@ const AddUser: React.FC = () => {
     setError(null)
     setSuccess(false)
 
-    if (!email.trim() || !fullName.trim() || !password) {
+    const trimmedEmail = email.trim().toLowerCase()
+    if (!trimmedEmail || !fullName.trim() || !password) {
       setError('Please fill in all fields')
+      return
+    }
+    if (/\s/.test(trimmedEmail)) {
+      setError('Email cannot contain spaces')
       return
     }
     if (password.length < 6) {
@@ -38,7 +43,7 @@ const AddUser: React.FC = () => {
     try {
       const { data, error: invokeError } = await supabase.functions.invoke('create-user', {
         body: {
-          email: email.trim(),
+          email: trimmedEmail,
           full_name: fullName.trim(),
           password,
           role,
@@ -122,7 +127,7 @@ const AddUser: React.FC = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
                 placeholder="advisor@calibre.com"
                 autoComplete="email"
               />

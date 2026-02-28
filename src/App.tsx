@@ -5,6 +5,7 @@ import Login from './components/Login'
 import ManageUsers from './components/ManageUsers'
 import AddUser from './components/AddUser'
 import EditUsers from './components/EditUsers'
+import DeleteUsers from './components/DeleteUsers'
 import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
 import './App.css'
@@ -44,6 +45,14 @@ function AppContent() {
             element={
               <RequireAuth>
                 <EditUsers />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/delete-users"
+            element={
+              <RequireAuth>
+                <DeleteUsers />
               </RequireAuth>
             }
           />
