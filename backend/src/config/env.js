@@ -1,3 +1,4 @@
+import 'dotenv/config'
 function required(name) {
   const v = process.env[name]
   if (!v) throw new Error(`Missing required env: ${name}`)
@@ -13,4 +14,3 @@ export const env = {
   supabaseUrl: required('SUPABASE_URL'),
   supabaseAnonKey: required('SUPABASE_ANON_KEY'),
 }
-
