@@ -7,7 +7,7 @@ function required(name) {
 export const env = {
   port: Number(process.env.PORT || 8080),
 
-  geminiApiKey: required('GEMINI_API_KEY'),
+  geminiApiKey: process.env.GEMINI_API_KEY || '',  // optional — only needed for AI routes
   geminiModel: process.env.GEMINI_MODEL || 'gemini-3-flash-preview',
 
   supabaseUrl: required('SUPABASE_URL'),

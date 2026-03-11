@@ -6,6 +6,7 @@ import ManageUsers from './components/ManageUsers'
 import AddUser from './components/AddUser'
 import EditUsers from './components/EditUsers'
 import DeleteUsers from './components/DeleteUsers'
+import ScenarioCalculator from './components/ScenarioCalculator'
 import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
 import './App.css'
@@ -58,6 +59,14 @@ function AppContent() {
           />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
+            path="/scenario"
+            element={
+              <RequireAuth>
+                <ScenarioCalculator />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/"
             element={

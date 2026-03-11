@@ -127,6 +127,13 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="navbar-right">
+                <Link to="/scenario" className="navbar-add-user-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                        <polyline points="16 7 22 7 22 13"></polyline>
+                    </svg>
+                    Scenario
+                </Link>
                 {user?.admin && (
                     <Link to="/admin/manage-users" className="navbar-add-user-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
