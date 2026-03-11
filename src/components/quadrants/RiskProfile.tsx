@@ -55,6 +55,64 @@ const RiskLevelInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
     );
 };
 
+const AIInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    return createPortal(
+        <div className="modal-overlay" onClick={onClose} style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+            backdropFilter: 'blur(4px)'
+        }}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+                width: '100%', maxWidth: '700px', padding: '2.5rem',
+                background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)',
+                position: 'relative'
+            }}>
+                <button
+                    onClick={onClose}
+                    style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >&times;</button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', margin: 0 }}>How AI Generates This Analysis</h2>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <section>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--secondary)', lineHeight: '1.5', opacity: 0.85 }}>
+                            Our AI synthesizes real-time data from four key pillars:
+                        </p>
+                        <ol style={{ fontSize: '0.85rem', color: 'var(--secondary)', opacity: 0.85, marginTop: '8px', paddingLeft: '20px' }}>
+                            <li><strong>Risk Profile:</strong> Stated risk tolerance levels.</li>
+                            <li><strong>Investment Allocation:</strong> Asset distribution across classes.</li>
+                            <li><strong>Cashflow:</strong> Inflows, outflows, and net surplus capacity.</li>
+                            <li><strong>Plans Held:</strong> Liquidity, lock-in periods, and coverage details.</li>
+                        </ol>
+                    </section>
+
+                    <section>
+                        <h4 style={{ color: 'var(--primary)', marginBottom: '8px', fontSize: '1rem' }}>Analysis Logic</h4>
+                        <div style={{ background: 'rgba(0,0,0,0.02)', padding: '15px', borderRadius: '12px', borderLeft: '3px solid var(--primary)' }}>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--secondary)', lineHeight: '1.6', margin: 0 }}>
+                                <strong>Allocation Alignment:</strong> Checks if asset volatility matches expected risk levels.<br />
+                                <strong>Capacity vs. Tolerance:</strong> Verifies if cashflow supports risk appetite.<br />
+                                <strong>Structural Review:</strong> Identifies conflicts between illiquid assets and flexibility needs.<br />
+                                <strong>The Gap:</strong> Pinpoints the exact delta between current reality and profile goals.
+                            </p>
+                        </div>
+                    </section>
+
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                        This analysis is supplementary and should be reviewed by a professional advisor before making any financial decisions.
+                    </p>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+};
+
 const RiskProfile: React.FC<RiskProfileProps> = ({
     client,
     mode = 'overview',
@@ -72,6 +130,7 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
     } | null>(null);
 
     const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
+    const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
     const [structuredAnalysis, setStructuredAnalysis] = useState<{
         "Key Insights": string;
         "Potential Risks": string;
@@ -267,7 +326,7 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
     return (
         <section className="glass-card quadrant">
             <div className="card-header">
-                <h3>Risk Profile</h3>
+                <h3>Risk Analysis</h3>
             </div>
 
             <div className="risk-indicator">
@@ -372,7 +431,47 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
                     )}
                 </div>
             </div>
+
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                padding: '4px 0 12px 0',
+                marginTop: 'auto'
+            }}>
+                <button
+                    onClick={() => setIsAIModalOpen(true)}
+                    style={{
+                        fontSize: '0.65rem',
+                        color: 'var(--text-muted)',
+                        background: 'rgba(0, 0, 0, 0.03)',
+                        padding: '4px 12px',
+                        borderRadius: '20px',
+                        border: '1px solid var(--border)',
+                        fontWeight: 700,
+                        letterSpacing: '0.05em',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)';
+                        e.currentTarget.style.color = 'var(--secondary)';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.03)';
+                        e.currentTarget.style.color = 'var(--text-muted)';
+                    }}
+                >
+                    <span style={{ fontSize: '0.8rem' }}>✨</span>
+                    This analysis is generated by AI
+                </button>
+            </div>
+
             <RiskLevelInfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} />
+            <AIInfoModal isOpen={isAIModalOpen} onClose={() => setIsAIModalOpen(false)} />
         </section>
     );
 };
