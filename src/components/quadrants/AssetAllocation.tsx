@@ -26,6 +26,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
     const [selectedSnapshot, setSelectedSnapshot] = React.useState<any>(null);
     const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
     const [activePlanName, setActivePlanName] = React.useState<string | null>(null);
+    const [chartType, setChartType] = React.useState<'absolute' | 'percent'>('absolute');
 
     const handleChartClick = (data: any) => {
         if (mode === 'focused' && data) {
@@ -137,7 +138,11 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
                     <p style={{ color: 'var(--secondary)', fontWeight: 700, marginBottom: 6 }}>{data.fullDate}</p>
                     {payload.map((entry: any, i: number) => entry.value > 0 && (
                         <p key={i} style={{ color: entry.fill, fontSize: '0.85rem', margin: '3px 0' }}>
-                            {entry.name}: <span style={{ fontWeight: 600 }}>${entry.value.toLocaleString()}</span>
+                            {entry.name}: <span style={{ fontWeight: 600 }}>
+                                {chartType === 'percent'
+                                    ? `${((entry.value / total) * 100).toFixed(1)}%`
+                                    : `$${entry.value.toLocaleString()}`}
+                            </span>
                         </p>
                     ))}
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 6, borderTop: '1px solid var(--border)', paddingTop: 6 }}>
@@ -151,8 +156,58 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
 
     return (
         <section className="glass-card quadrant">
-            <div className="card-header">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3>Asset Allocation</h3>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        e.nativeEvent.stopImmediatePropagation();
+                        setChartType(chartType === 'absolute' ? 'percent' : 'absolute');
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseUp={(e) => e.stopPropagation()}
+                    style={{
+                        background: 'transparent',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        backgroundColor: 'rgba(0,0,0,0.02)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'rgba(0,0,0,0.06)';
+                        e.currentTarget.style.color = 'var(--secondary)';
+                        e.currentTarget.style.borderColor = 'var(--primary)';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'rgba(0,0,0,0.02)';
+                        e.currentTarget.style.color = 'var(--text-muted)';
+                        e.currentTarget.style.borderColor = 'var(--border)';
+                    }}
+                >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        {chartType === 'absolute' ? (
+                            <path d="M18 20V10M12 20V4M6 20v-6" />
+                        ) : (
+                            <>
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <line x1="3" y1="9" x2="21" y2="9" />
+                                <line x1="3" y1="15" x2="21" y2="15" />
+                            </>
+                        )}
+                    </svg>
+                    <span>{chartType === 'absolute' ? 'Show %' : 'Show Value'}</span>
+                </button>
             </div>
             <div className="chart-container" style={{ width: '100%', flex: 1, marginTop: '10px' }}>
                 {hasData ? (
@@ -162,6 +217,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
                             onClick={handleChartClick}
                             margin={{ top: 0, right: 20, bottom: 0, left: 0 }}
                             style={{ cursor: mode === 'focused' ? 'pointer' : 'default' }}
+                            stackOffset={chartType === 'percent' ? 'expand' : undefined}
                         >
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis
@@ -176,7 +232,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
                             <YAxis
                                 stroke="var(--text-muted)"
                                 tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-                                tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                                tickFormatter={(v) => chartType === 'percent' ? `${(v * 100).toFixed(0)}%` : `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                                 tickLine={false}
                                 axisLine={false}
                             />
