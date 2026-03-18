@@ -14,8 +14,8 @@ const SYSTEM_INSTRUCTION_BASE = `Role: You are a Financial Planning Consultant a
 Objective: Synthesize data to determine if the client's current financial reality matches their stated risk appetite.
 
 Data Inputs for Synthesis:
-- Risk Profile Category
-- Investment Allocation
+- Risk Profile Description
+- Asset Allocation
 - Cashflow
 - Plans Held
 
@@ -33,9 +33,8 @@ function buildContents(params) {
       role: 'user',
       parts: [
         {
-          text: `Risk Profile Category: ${params.riskProfileCategory}
-- Risk Profile Description: ${params.riskProfileDescription}
-- Investment Allocation: ${params.investmentAllocation}
+          text: `Risk Profile Description: ${params.riskProfileDescription}
+- Asset Allocation: ${params.assetAllocation}
 - Cashflow: ${params.cashflow}
 - Plans Held: ${params.plansHeld}`,
         },
