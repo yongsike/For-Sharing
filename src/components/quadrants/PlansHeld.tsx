@@ -76,7 +76,7 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
 
                 <div className="modal-body">
                     {hasValue ? (
-                        <div className="chart-container" style={{ width: '100%', height: '450px', marginTop: '0' }}>
+                        <div className="chart-container" style={{ width: '100%', height: '430px', marginTop: '0.5rem' }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={valuationData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -127,12 +127,12 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
 
                     {isInsurance && (
                         <div className="insurance-details" style={{ 
-                            marginTop: '1rem', 
+                            marginTop: '0.5rem', 
                             display: 'grid', 
                             gridTemplateColumns: 'repeat(4, 1fr)', 
                             gap: '0.75rem 1rem',
                             borderTop: '1px solid var(--border)',
-                            paddingTop: '1rem'
+                            paddingTop: '1.5rem'
                         }}>
                             <div className="stat-group align-center">
                                 <span className="label">Policy Type</span>
@@ -179,12 +179,12 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
 
                     {!isInsurance && (
                         <div className="investment-details" style={{ 
-                            marginTop: '1rem', 
+                            marginTop: '0.5rem', 
                             display: 'grid', 
                             gridTemplateColumns: 'repeat(4, 1fr)', 
                             gap: '0.75rem 1rem',
                             borderTop: '1px solid var(--border)',
-                            paddingTop: '1rem'
+                            paddingTop: '1.5rem'
                         }}>
                             <div className="stat-group align-center">
                                 <span className="label">Policy Type</span>

@@ -283,7 +283,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
 
                         <div className="modal-body">
 
-                        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: '4rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: '2rem' }}>
                             <div style={{ flex: '1.2', minWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
 
                                 <div style={{ width: '100%', height: '400px' }}>

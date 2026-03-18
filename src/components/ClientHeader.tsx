@@ -116,21 +116,16 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
 
     if (mode === 'update') {
         return (
-            <div className="modal-overlay animate-fade" onClick={onClose} style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: 'rgba(26, 26, 26, 0.7)', backdropFilter: 'blur(8px)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000,
-                padding: '80px 20px 20px 20px'
-            }}>
+            <div className="modal-overlay animate-fade" onClick={onClose} style={{ zIndex: 10000 }}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                    width: '100%', maxWidth: '900px', maxHeight: '85vh', overflow: 'hidden',
                     position: 'relative', display: 'flex', flexDirection: 'column',
                     background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
                 }}>
                     <PdfImport 
                         clientId={client.client_id}
                         variant="inline"
-                        onClose={() => setMode('view')}
+                        onClose={onClose}
+                        onCancel={() => setMode('view')}
                         onSuccess={() => {
                             // On success, refresh the page to update dashboard data
                             window.location.reload();
@@ -155,14 +150,14 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
 
                 {/* Fixed Header Area */}
                 <div className="modal-header">
-                    <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ flex: 1 }}>
                             <h2 style={{ fontSize: '1.8rem', color: 'var(--secondary)', marginBottom: '8px' }}>{client.full_name}</h2>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', letterSpacing: '0.02em', margin: 0 }}>
                                     Client ID: <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>{client.client_id}</span>
                                 </p>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Last Updated:</span>
                                         <span style={{ fontSize: '0.9rem', color: 'var(--secondary)', fontWeight: 600 }}>
@@ -178,13 +173,13 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
                                             display: 'inline-flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            padding: '4px 16px',
+                                            padding: '2px 12px',
                                             background: 'var(--primary, #c5b358)',
                                             color: '#fff',
                                             border: 'none',
                                             borderRadius: '6px',
                                             fontSize: '0.75rem',
-                                            fontWeight: 700,
+                                            fontWeight: 600,
                                             cursor: 'pointer',
                                             boxShadow: '0 2px 8px rgba(197, 179, 88, 0.2)',
                                             transition: 'all 0.2s',
@@ -203,7 +198,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
                     {/* Tabs Switcher - Segmented Control Style */}
                     <div className="tabs-switcher" style={{
                         display: 'flex',
-                        marginBottom: '1.5rem',
+                        marginBottom: '0.5rem',
                         width: '100%',
                         backgroundColor: 'rgba(0, 0, 0, 0.04)',
                         borderRadius: '12px',
@@ -376,7 +371,7 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
                     <div className="client-avatar">{initials}</div>
                     <div className="client-details">
                         <h1 style={{ fontSize: '1.5rem', margin: 0 }}>{client.full_name}</h1>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Click for profile details</p>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Click for profile details</p>
                     </div>
                 </div>
 

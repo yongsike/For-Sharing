@@ -34,17 +34,17 @@ const RiskLevelInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                     style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}
                 >&times;</button>
 
-                <div className="modal-header">
-                    <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', marginBottom: '0', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Risk Level Guide</h2>
+                <div className="modal-header" style={{ padding: '2rem 2rem 0rem 2rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Risk Level Guide</h2>
                 </div>
 
-                <div className="modal-body" style={{ gap: '1.5rem' }}>
+                <div className="modal-body">
                     {Object.entries(RISK_LEVEL_DESCRIPTIONS).map(([level, desc]) => (
                         <div key={level}>
-                            <h4 style={{ color: 'var(--primary)', marginBottom: '6px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h4 style={{ color: 'var(--primary)', fontSize: '1rem', display: 'flex', alignItems: 'center', marginTop: '1.5rem', marginBottom: '4px'}}>
                                 {level}
                             </h4>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--secondary)', lineHeight: '1.5', opacity: 0.85 }}>{desc}</p>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--secondary)', lineHeight: '1.5', opacity: 0.85}}>{desc}</p>
                         </div>
                     ))}
                 </div>
@@ -74,8 +74,8 @@ const AIInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
                     </div>
                 </div>
 
-                <div className="modal-body" style={{ gap: '1.5rem' }}>
-                    <section>
+                <div className="modal-body">
+                    <section style={{ marginBottom: '1.5rem' }}>
                         <p style={{ fontSize: '0.9rem', color: 'var(--secondary)', lineHeight: '1.5', opacity: 0.85 }}>
                             Our AI synthesizes real-time data from four key pillars:
                         </p>
@@ -87,7 +87,7 @@ const AIInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
                         </ol>
                     </section>
 
-                    <section>
+                    <section style={{ marginBottom: '1rem' }}>
                         <h4 style={{ color: 'var(--primary)', marginBottom: '8px', fontSize: '1rem' }}>Analysis Logic</h4>
                         <div style={{ background: 'rgba(0,0,0,0.02)', padding: '15px', borderRadius: '12px', borderLeft: '3px solid var(--primary)' }}>
                             <p style={{ fontSize: '0.85rem', color: 'var(--secondary)', lineHeight: '1.6', margin: 0 }}>
@@ -99,7 +99,7 @@ const AIInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
                         </div>
                     </section>
 
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: 'auto' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: '1rem'}}>
                         This analysis is supplementary and should be reviewed by a professional advisor before informing any financial decisions.
                     </p>
                 </div>
@@ -135,11 +135,11 @@ const AIFeedbackModal: React.FC<{
                 >&times;</button>
 
                 <div className="modal-header">
-                    <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', marginBottom: '0' }}>Was This Analysis Helpful?</h2>
+                    <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem'}}>Was This Analysis Helpful?</h2>
                 </div>
 
-                <div className="modal-body" style={{ gap: '1rem' }}>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', lineHeight: '1.5' }}>
+                <div className="modal-body">
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0rem', marginBottom: '2rem', lineHeight: '1.5' }}>
                         Your feedback helps us improve the relevance and accuracy of our AI-generated risk insights.
                     </p>
 
