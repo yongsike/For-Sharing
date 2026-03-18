@@ -55,163 +55,169 @@ const PlanDetailModal: React.FC<PlanDetailModalProps> = ({ plan, onClose }) => {
     const hasValue = valuationData.some(v => v.value > 0);
 
     return createPortal(
-        <div className="modal-overlay animate-fade" onClick={onClose} style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(6px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
-            paddingTop: '70px'
-        }}>
+        <div className="modal-overlay animate-fade" onClick={onClose} style={{ zIndex: 9999 }}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                width: '95%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto',
-                position: 'relative', padding: '1.5rem 2.5rem 2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
-                background: '#fff', borderRadius: '16px', boxShadow: 'var(--shadow-xl)'
+                position: 'relative', display: 'flex', flexDirection: 'column', gap: '0',
+                background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
             }}>
                 <button
                     onClick={onClose}
                     style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '10px', zIndex: 10 }}
                 >&times;</button>
-                <div className="modal-header" style={{ textAlign: 'center', marginBottom: '0.25rem', marginTop: '0.5rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{plan.plan_name}</h2>
-                    <div className="modal-id" style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Plan ID: {plan.plan_id}</div>
-                </div>
-
-                {hasValue ? (
-                    <div className="chart-container" style={{ width: '100%', height: '350px', marginTop: '10px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={valuationData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                                <XAxis
-                                    dataKey="rawDate"
-                                    stroke="var(--text-muted)"
-                                    tick={<CustomizedXAxisTick />}
-                                    interval={0}
-                                    height={30}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <YAxis
-                                    stroke="var(--text-muted)"
-                                    tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-                                    tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Line
-                                    type="monotone"
-                                    dataKey="value"
-                                    name={isInsurance ? "Cash Value" : "Market Value"}
-                                    stroke="var(--primary)"
-                                    strokeWidth={3}
-                                    dot={{ r: 4, fill: '#fff', stroke: 'var(--primary)', strokeWidth: 2 }}
-                                    activeDot={{ r: 6 }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                ) : (
-                    <div className="no-value-info" style={{
-                        padding: '1.5rem',
-                        textAlign: 'center',
-                        color: 'var(--secondary)',
-                        background: 'rgba(0, 0, 0, 0.02)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border)',
-                        marginTop: '1rem',
-                        marginBottom: '1rem',
-                        fontSize: '0.9rem'
-                    }}>
-                        {isInsurance ? "This is a pure protection plan with no cash value." : "No valuation data available for this plan."}
-                    </div>
-                )}
-
-                {isInsurance && (
-                    <div className="insurance-details" style={{ marginTop: '0.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.25rem 1rem' }}>
-                        <div className="stat-group align-center">
-                            <span className="label">Policy Type</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.policy_type || '-'}</span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Benefit Type</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.benefit_type || '-'}</span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Sum Assured</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>${(plan.sum_assured || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Premium Amount</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                                ${(plan.premium_amount || 0).toLocaleString()}
-                            </span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Payment Term</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                                {plan.payment_term ? `${plan.payment_term} Years` : '-'} {plan.payment_frequency ? `(${plan.payment_frequency})` : ''}
-                            </span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Life Assured</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.life_assured || '-'}</span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Start Date</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                                {plan.start_date ? new Date(plan.start_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-                            </span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Expiry Date</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                                {plan.expiry_date ? new Date(plan.expiry_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-                            </span>
-                        </div>
-                    </div>
-                )}
-
-                {!isInsurance && (
-                    <div className="investment-details" style={{ marginTop: '0.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.25rem 1rem' }}>
-                        <div className="stat-group align-center">
-                            <span className="label">Policy Type</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.policy_type || '-'}</span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Initial Investment</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>${(plan.initial_investment || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Contribution Amount</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                                ${(plan.contribution_amount || 0).toLocaleString()}
-                            </span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Contribution Frequency</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.contribution_frequency || '-'}</span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">Start Date</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                                {plan.start_date ? new Date(plan.start_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-                            </span>
-                        </div>
-                        <div className="stat-group align-center">
-                            <span className="label">End Date</span>
-                            <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                                {plan.end_date ? new Date(plan.end_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-                            </span>
-                        </div>
-                    </div>
-                )}
-
-                <div className="modal-footer" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                    <div className="stat-group align-center">
-                        <span className="label" style={{ marginBottom: '8px' }}>Plan Status</span>
-                        <span className={`status-pill ${plan.status.toLowerCase()}`} style={{ fontSize: '0.85rem', padding: '6px 16px' }}>
+                <div className="modal-header" style={{ textAlign: 'center', marginBottom: '0', marginTop: '0' }}>
+                    <h2 style={{ fontSize: '1.6rem', marginBottom: '0.25rem' }}>{plan.plan_name}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                        <div className="modal-id" style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Plan ID: {plan.plan_id}</div>
+                        <span className={`status-pill ${plan.status.toLowerCase()}`} style={{ fontSize: '0.75rem', padding: '2px 10px' }}>
                             {plan.status}
                         </span>
                     </div>
+                </div>
+
+                <div className="modal-body">
+                    {hasValue ? (
+                        <div className="chart-container" style={{ width: '100%', height: '450px', marginTop: '0' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={valuationData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                                    <XAxis
+                                        dataKey="rawDate"
+                                        stroke="var(--text-muted)"
+                                        tick={<CustomizedXAxisTick />}
+                                        interval={0}
+                                        height={30}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <YAxis
+                                        stroke="var(--text-muted)"
+                                        tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                                        tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="value"
+                                        name={isInsurance ? "Cash Value" : "Market Value"}
+                                        stroke="var(--primary)"
+                                        strokeWidth={3}
+                                        dot={{ r: 4, fill: '#fff', stroke: 'var(--primary)', strokeWidth: 2 }}
+                                        activeDot={{ r: 6 }}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : (
+                        <div className="no-value-info" style={{
+                            padding: '1.5rem',
+                            textAlign: 'center',
+                            color: 'var(--secondary)',
+                            background: 'rgba(0, 0, 0, 0.02)',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border)',
+                            marginTop: '1rem',
+                            marginBottom: '1rem',
+                            fontSize: '0.9rem'
+                        }}>
+                            {isInsurance ? "This is a pure protection plan with no cash value." : "No valuation data available for this plan."}
+                        </div>
+                    )}
+
+                    {isInsurance && (
+                        <div className="insurance-details" style={{ 
+                            marginTop: '1rem', 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(4, 1fr)', 
+                            gap: '0.75rem 1rem',
+                            borderTop: '1px solid var(--border)',
+                            paddingTop: '1rem'
+                        }}>
+                            <div className="stat-group align-center">
+                                <span className="label">Policy Type</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.policy_type || '-'}</span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Benefit Type</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.benefit_type || '-'}</span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Sum Assured</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>${(plan.sum_assured || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Premium Amount</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                    ${(plan.premium_amount || 0).toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Payment Term</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                    {plan.payment_term ? `${plan.payment_term} Years` : '-'} {plan.payment_frequency ? `(${plan.payment_frequency})` : ''}
+                                </span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Life Assured</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.life_assured || '-'}</span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Start Date</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                    {plan.start_date ? new Date(plan.start_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                </span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Expiry Date</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                    {plan.expiry_date ? new Date(plan.expiry_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {!isInsurance && (
+                        <div className="investment-details" style={{ 
+                            marginTop: '1rem', 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(4, 1fr)', 
+                            gap: '0.75rem 1rem',
+                            borderTop: '1px solid var(--border)',
+                            paddingTop: '1rem'
+                        }}>
+                            <div className="stat-group align-center">
+                                <span className="label">Policy Type</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.policy_type || '-'}</span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Initial Investment</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>${(plan.initial_investment || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Contribution Amount</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                    ${(plan.contribution_amount || 0).toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Contribution Frequency</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>{plan.contribution_frequency || '-'}</span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">Start Date</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                    {plan.start_date ? new Date(plan.start_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                </span>
+                            </div>
+                            <div className="stat-group align-center">
+                                <span className="label">End Date</span>
+                                <span className="value" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                                    {plan.end_date ? new Date(plan.end_date).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>,

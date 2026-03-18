@@ -1,7 +1,6 @@
 export interface RiskAnalysisParams {
-  riskProfileCategory: string;
   riskProfileDescription: string;
-  investmentAllocation: string;
+  assetAllocation: string;
   cashflow: string;
   plansHeld: string;
 }

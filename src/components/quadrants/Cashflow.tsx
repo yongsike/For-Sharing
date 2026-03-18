@@ -223,20 +223,14 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                 <div
                     className="modal-overlay animate-fade"
                     onClick={() => setIsModalOpen(false)}
-                    style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(6px)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
-                        paddingTop: '70px' // Offset centering to account for sticky navbar
-                    }}
+                    style={{ zIndex: 9999 }}
                 >
                     <div
                         className="modal-content"
                         onClick={e => e.stopPropagation()}
                         style={{
-                            width: '95%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto',
-                            position: 'relative', padding: '1.5rem 2.5rem 3rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1rem',
-                            background: '#fff', borderRadius: '16px', boxShadow: 'var(--shadow-xl)'
+                            position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem',
+                            background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
                         }}
                     >
                         <button
@@ -244,24 +238,21 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                             style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '10px', zIndex: 10 }}
                         >&times;</button>
 
-                        <div style={{ textAlign: 'center', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
+                        <div className="modal-header" style={{ textAlign: 'center', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
                             <h2 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>Cashflow Breakdown</h2>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>{selectedSnapshot.fullDate}</p>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: '3rem' }}>
-                            <div style={{ flex: '1.2', minWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-
-                                <div style={{ width: '100%', height: '400px' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            {
-                                                (() => {
+                        <div className="modal-body">
+                            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: '3rem' }}>
+                                <div style={{ flex: '1.2', minWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+                                    <div style={{ width: '100%', height: '400px' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                {(() => {
                                                     const groups = getPieGroups(selectedSnapshot);
-
                                                     const inflowItems = groups[0].items.map(i => ({ ...i, category: groups[0].name })).filter(i => i.value > 0);
                                                     const outflowItems = groups.slice(1).flatMap(g => g.items.map(i => ({ ...i, category: g.name }))).filter(i => i.value > 0);
-
                                                     const totalInflows = inflowItems.reduce((sum, i) => sum + (i.value || 0), 0);
                                                     const totalOutflows = outflowItems.reduce((sum, i) => sum + (i.value || 0), 0);
 
@@ -271,21 +262,13 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                                                                 formatter={(value: any, name: any, entry: any) => {
                                                                     const itemCategory = entry.payload.category;
                                                                     const total = itemCategory === 'Inflows' ? totalInflows : totalOutflows;
-                                                                    return [
-                                                                        `${((Number(value) / (total || 1)) * 100).toFixed(1)}%`,
-                                                                        name
-                                                                    ];
+                                                                    return [`${((Number(value) / (total || 1)) * 100).toFixed(1)}%`, name];
                                                                 }}
                                                             />
-                                                            {/* Inner Ring: Inflows */}
-                                                            <Pie
-                                                                data={inflowItems}
-                                                                cx="50%" cy="50%" innerRadius={65} outerRadius={105} paddingAngle={1} dataKey="value" animationDuration={800}
-                                                            >
+                                                            <Pie data={inflowItems} cx="50%" cy="50%" innerRadius={65} outerRadius={105} paddingAngle={1} dataKey="value" animationDuration={800}>
                                                                 {inflowItems.map((p: any, idx: number) => {
                                                                     const isHighlighted = activeItemName === p.name || (activeCategory === p.category && !activeItemName);
                                                                     const isDimmed = (activeItemName && activeItemName !== p.name) || (activeCategory && activeCategory !== p.category && !activeItemName);
-
                                                                     return (
                                                                         <Cell
                                                                             key={`inflow-${p.name}-${idx}`}
@@ -302,15 +285,10 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                                                                     );
                                                                 })}
                                                             </Pie>
-                                                            {/* Outer Ring: Expenses & Wealth Transfers (Outflows) */}
-                                                            <Pie
-                                                                data={outflowItems}
-                                                                cx="50%" cy="50%" innerRadius={115} outerRadius={165} paddingAngle={1} dataKey="value" animationDuration={800}
-                                                            >
+                                                            <Pie data={outflowItems} cx="50%" cy="50%" innerRadius={115} outerRadius={165} paddingAngle={1} dataKey="value" animationDuration={800}>
                                                                 {outflowItems.map((p: any, idx: number) => {
                                                                     const isHighlighted = activeItemName === p.name || (activeCategory === p.category && !activeItemName);
                                                                     const isDimmed = (activeItemName && activeItemName !== p.name) || (activeCategory && activeCategory !== p.category && !activeItemName);
-
                                                                     return (
                                                                         <Cell
                                                                             key={`outflow-${p.name}-${idx}`}
@@ -329,102 +307,99 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                                                             </Pie>
                                                         </>
                                                     );
-                                                })()
-                                            }
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                                })()}
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+
+                                    <div
+                                        onMouseEnter={() => setActiveItemName('Net Cashflow')} onMouseLeave={() => setActiveItemName(null)}
+                                        style={{
+                                            width: '100%', maxWidth: '320px', padding: '15px', textAlign: 'center',
+                                            background: selectedSnapshot.netCashflow >= 0 ? 'rgba(197, 179, 88, 0.08)' : 'rgba(214, 40, 40, 0.08)',
+                                            borderRadius: '12px', border: `1px solid ${selectedSnapshot.netCashflow >= 0 ? 'rgba(197, 179, 88, 0.2)' : 'rgba(214, 40, 40, 0.2)'}`,
+                                            opacity: activeItemName && activeItemName !== 'Net Cashflow' ? 0.3 : 1, transition: '0.2s', cursor: 'pointer',
+                                            transform: activeItemName === 'Net Cashflow' ? 'scale(1.05)' : 'scale(1)'
+                                        }}
+                                    >
+                                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: selectedSnapshot.netCashflow >= 0 ? 'var(--primary)' : '#D62828', fontWeight: 700 }}>Net Cashflow</div>
+                                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--secondary)' }}>${selectedSnapshot.netCashflow.toLocaleString()}</div>
+                                    </div>
                                 </div>
 
-                                <div
-                                    onMouseEnter={() => setActiveItemName('Net Cashflow')} onMouseLeave={() => setActiveItemName(null)}
-                                    style={{
-                                        width: '100%', maxWidth: '320px', padding: '15px', textAlign: 'center',
-                                        background: selectedSnapshot.netCashflow >= 0 ? 'rgba(197, 179, 88, 0.08)' : 'rgba(214, 40, 40, 0.08)',
-                                        borderRadius: '12px', border: `1px solid ${selectedSnapshot.netCashflow >= 0 ? 'rgba(197, 179, 88, 0.2)' : 'rgba(214, 40, 40, 0.2)'}`,
-                                        opacity: activeItemName && activeItemName !== 'Net Cashflow' ? 0.3 : 1, transition: '0.2s', cursor: 'pointer',
-                                        transform: activeItemName === 'Net Cashflow' ? 'scale(1.05)' : 'scale(1)'
-                                    }}
-                                >
-                                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: selectedSnapshot.netCashflow >= 0 ? 'var(--primary)' : '#D62828', fontWeight: 700 }}>Net Cashflow</div>
-                                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--secondary)' }}>${selectedSnapshot.netCashflow.toLocaleString()}</div>
-                                </div>
-                            </div>
+                                <div style={{ flex: '1', minWidth: '350px' }}>
+                                    <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '1.5rem', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Details by Category</h4>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        {getPieGroups(selectedSnapshot).map((group) => {
+                                            const groupColor = CASHFLOW_COLORS[group.name];
+                                            const actualItems = group.items.filter(it => it.value > 0);
+                                            const isCatActive = activeCategory === group.name || (activeItemName && actualItems.find(it => it.name === activeItemName));
+                                            const total = group.items.reduce((sum, it) => sum + it.value, 0);
 
-                            <div style={{ flex: '1', minWidth: '350px' }}>
-                                <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '1.5rem', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Details by Category</h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                    {getPieGroups(selectedSnapshot).map((group) => {
-                                        const groupColor = CASHFLOW_COLORS[group.name];
-                                        const actualItems = group.items.filter(it => it.value > 0);
-                                        const isCatActive = activeCategory === group.name || (activeItemName && actualItems.find(it => it.name === activeItemName));
-                                        const total = group.items.reduce((sum, it) => sum + it.value, 0);
-
-                                        return (
-                                            <div
-                                                key={group.name}
-                                                style={{
-                                                    opacity: total === 0 ? 0.4 : (activeCategory && activeCategory !== group.name && !activeItemName ? 0.3 : 1),
-                                                    transition: 'all 0.3s ease',
-                                                    padding: '8px 12px',
-                                                    borderRadius: '8px',
-                                                    background: isCatActive ? `rgba(${group.name === 'Inflows' ? '113, 146, 102' : '100, 100, 100'}, 0.05)` : 'transparent',
-                                                    borderLeft: isCatActive ? `4px solid ${groupColor}` : '4px solid transparent',
-                                                    boxShadow: isCatActive && total > 0 ? '0 4px 15px rgba(0,0,0,0.05)' : 'none'
-                                                }}
-                                                onMouseEnter={() => total > 0 && setActiveCategory(group.name)}
-                                                onMouseLeave={() => setActiveCategory(null)}
-                                            >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: total === 0 ? '#ccc' : groupColor }} />
-                                                        <span style={{ fontWeight: 800, color: total === 0 ? 'var(--text-muted)' : 'var(--secondary)', fontSize: '0.95rem' }}>{group.name}</span>
+                                            return (
+                                                <div
+                                                    key={group.name}
+                                                    style={{
+                                                        opacity: total === 0 ? 0.4 : (activeCategory && activeCategory !== group.name && !activeItemName ? 0.3 : 1),
+                                                        transition: 'all 0.3s ease',
+                                                        padding: '8px 12px',
+                                                        borderRadius: '8px',
+                                                        background: isCatActive ? `rgba(${group.name === 'Inflows' ? '113, 146, 102' : '100, 100, 100'}, 0.05)` : 'transparent',
+                                                        borderLeft: isCatActive ? `4px solid ${groupColor}` : '4px solid transparent',
+                                                        boxShadow: isCatActive && total > 0 ? '0 4px 15px rgba(0,0,0,0.05)' : 'none'
+                                                    }}
+                                                    onMouseEnter={() => total > 0 && setActiveCategory(group.name)}
+                                                    onMouseLeave={() => setActiveCategory(null)}
+                                                >
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: total === 0 ? '#ccc' : groupColor }} />
+                                                            <span style={{ fontWeight: 800, color: total === 0 ? 'var(--text-muted)' : 'var(--secondary)', fontSize: '0.95rem' }}>{group.name}</span>
+                                                        </div>
+                                                        <span style={{ fontWeight: 700, color: total === 0 ? 'var(--text-muted)' : 'var(--secondary)' }}>${total.toLocaleString()}</span>
                                                     </div>
-                                                    <span style={{ fontWeight: 700, color: total === 0 ? 'var(--text-muted)' : 'var(--secondary)' }}>${total.toLocaleString()}</span>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '12px' }}>
+                                                        {group.items.map((item, idx) => {
+                                                            const isItemActive = activeItemName === item.name;
+                                                            const isZero = item.value === 0;
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.stopPropagation();
+                                                                        if (!isZero) setActiveItemName(item.name);
+                                                                    }}
+                                                                    onMouseLeave={() => setActiveItemName(null)}
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        justifyContent: 'space-between',
+                                                                        fontSize: '0.85rem',
+                                                                        color: isZero ? 'var(--text-muted)' : (isItemActive ? 'var(--secondary)' : 'var(--text-muted)'),
+                                                                        opacity: isZero ? 0.35 : 1,
+                                                                        fontWeight: isItemActive ? 700 : 400,
+                                                                        padding: '4px 10px',
+                                                                        borderRadius: '6px',
+                                                                        background: isItemActive ? '#fff' : 'transparent',
+                                                                        borderLeft: isItemActive ? `2px solid ${item.color}` : '2px solid transparent',
+                                                                        boxShadow: isItemActive ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                                                                        transition: 'all 0.2s ease',
+                                                                        cursor: isZero ? 'default' : 'pointer',
+                                                                        transform: isItemActive ? 'translateX(4px)' : 'none'
+                                                                    }}
+                                                                >
+                                                                    <span>{item.name}</span>
+                                                                    <span>${item.value.toLocaleString()}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '12px' }}>
-                                                    {group.items.map((item, idx) => {
-                                                        const isItemActive = activeItemName === item.name;
-                                                        const isZero = item.value === 0;
-
-                                                        return (
-                                                            <div
-                                                                key={idx}
-                                                                onMouseEnter={(e) => {
-                                                                    e.stopPropagation();
-                                                                    if (!isZero) setActiveItemName(item.name);
-                                                                }}
-                                                                onMouseLeave={() => setActiveItemName(null)}
-                                                                style={{
-                                                                    display: 'flex',
-                                                                    justifyContent: 'space-between',
-                                                                    fontSize: '0.85rem',
-                                                                    color: isZero ? 'var(--text-muted)' : (isItemActive ? 'var(--secondary)' : 'var(--text-muted)'),
-                                                                    opacity: isZero ? 0.35 : 1,
-                                                                    fontWeight: isItemActive ? 700 : 400,
-                                                                    padding: '4px 10px',
-                                                                    borderRadius: '6px',
-                                                                    background: isItemActive ? '#fff' : 'transparent',
-                                                                    borderLeft: isItemActive ? `2px solid ${item.color}` : '2px solid transparent',
-                                                                    boxShadow: isItemActive ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-                                                                    transition: 'all 0.2s ease',
-                                                                    cursor: isZero ? 'default' : 'pointer',
-                                                                    transform: isItemActive ? 'translateX(4px)' : 'none'
-                                                                }}
-                                                            >
-                                                                <span>{item.name}</span>
-                                                                <span>${item.value.toLocaleString()}</span>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             )}

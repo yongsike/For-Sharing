@@ -19,6 +19,7 @@ interface PdfImportProps {
   /** Called after a successful apply so the parent can refresh data */
   onSuccess?: (newClientId?: string) => void;
   onClose: () => void;
+  variant?: 'modal' | 'inline';
 }
 
 type Step = 'upload' | 'extracting' | 'review' | 'applying' | 'done';
@@ -76,7 +77,7 @@ const ENUMS = {
   status: ['Pending', 'Active', 'Lapsed', 'Matured', 'Settled', 'Void']
 };
 
-export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClose }) => {
+export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClose, variant = 'modal' }) => {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -97,9 +98,7 @@ export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClo
   const [includeInvestments, setIncludeInvestments] = useState(true);
   const [errorFields, setErrorFields] = useState<Set<string>>(new Set());
 
-  // Debounced ID Check logic
-  const [isCheckingId, setIsCheckingId] = useState(false);
-  const [showStatusBanner, setShowStatusBanner] = useState(!!clientId);
+
 
   // If clientId is provided, fetch the client immediately so the header shows their name
   useEffect(() => {
@@ -143,12 +142,10 @@ export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClo
   // Handle ID No check whenever it changes (debounced)
   useEffect(() => {
     if (clientId || !extracted?.client.id_no || extracted.client.id_no.length < 5) {
-      if (!clientId) setShowStatusBanner(false);
       return;
     }
 
     const timer = setTimeout(async () => {
-      setIsCheckingId(true);
       try {
         const match = await matchClientByIdNo(extracted.client.id_no || '');
         if (match) {
@@ -158,11 +155,8 @@ export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClo
           setExistingClient(null);
           setIsNewClient(true);
         }
-        setShowStatusBanner(true);
       } catch (err) {
         console.error('ID check error:', err);
-      } finally {
-        setIsCheckingId(false);
       }
     }, 800);
 
@@ -469,32 +463,15 @@ export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClo
     });
   };
 
-  const modal = (
-    <div
-      style={{
-        position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.65)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 20000, padding: '2rem 1rem',
-      }}
-    >
-      <div style={{
-        background: '#fff', borderRadius: '24px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        width: '100%', maxWidth: '800px',
-        maxHeight: 'calc(100vh - 4rem)',
-        display: 'flex', flexDirection: 'column',
-        overflow: 'hidden',
-        position: 'relative'
-      }}>
+  const modalContent = (
+    <>
         {/* Header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '1.5rem 2rem', borderBottom: '1px solid var(--border, #eee)',
+          padding: '1rem 2rem', borderBottom: '1px solid var(--border, #eee)',
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.3rem', color: 'var(--secondary, #333)' }}>
+            <h2 style={{ margin: 0, fontSize: '1.8rem', color: 'var(--secondary, #333)' }}>
               {isNewClient ? 'Create Client Profile' : 'Update Client Profile'}
             </h2>
             <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--text-muted, #888)' }}>
@@ -511,7 +488,7 @@ export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClo
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem' }}>
+        <div className="modal-body">
 
           {/* UPLOAD STEP */}
           {(step === 'upload' || step === 'extracting') && (
@@ -583,29 +560,7 @@ export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClo
           {step === 'review' && extracted && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-              {/* Status banner - only shown when relevant */}
-              {showStatusBanner && (
-                <div style={{
-                  padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600,
-                  background: isNewClient ? 'rgba(113,146,102,0.1)' : 'rgba(197,179,88,0.1)',
-                  color: isNewClient ? '#2e7d32' : 'var(--primary, #c5b358)',
-                  border: `1px solid ${isNewClient ? 'rgba(113,146,102,0.3)' : 'rgba(197,179,88,0.3)'}`,
-                  display: 'flex', alignItems: 'center', gap: '8px'
-                }}>
-                  {isCheckingId ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <div style={{ width: '12px', height: '12px', border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
-                       Verifying ID...
-                    </div>
-                  ) : (
-                    <>
-                      {isNewClient
-                        ? '✨ New client — a new record will be created'
-                        : `↩ Returning client — updating existing record${existingClient?.full_name ? ` for ${existingClient.full_name}` : ''}`}
-                    </>
-                  )}
-                </div>
-              )}
+
 
               {/* Autopopulate Button */}
               <div style={{
@@ -1064,59 +1019,80 @@ export const PdfImport: React.FC<PdfImportProps> = ({ clientId, onSuccess, onClo
           )}
         </div>
 
-        {/* Footer */}
-        <div style={{
-          padding: '1.25rem 2rem', borderTop: '1px solid var(--border, #eee)',
-          display: 'flex', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center',
-        }}>
-          <div style={{ flex: 1 }}>
-            {error && (
-              <p style={{ margin: 0, color: '#c0392b', fontSize: '0.9rem', fontWeight: 600 }}>
-                ⚠ {error}
-              </p>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-          {step === 'upload' && (
-            <>
-              <button onClick={onClose} style={secondaryBtnStyle}>Cancel</button>
-              <button
-                onClick={handleAnalyse}
-                disabled={!file}
-                style={{ ...primaryBtnStyle, opacity: file ? 1 : 0.5 }}
-              >
-                Analyse PDF
-              </button>
-            </>
+      {/* Footer */}
+      <div style={{
+        padding: '1rem 2rem', borderTop: '1px solid var(--border, #eee)',
+        display: 'flex', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div style={{ flex: 1 }}>
+          {error && (
+            <p style={{ margin: 0, color: '#c0392b', fontSize: '0.9rem', fontWeight: 600 }}>
+              ⚠ {error}
+            </p>
           )}
-          {step === 'extracting' && (
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+        {step === 'upload' && (
+          <>
             <button onClick={onClose} style={secondaryBtnStyle}>Cancel</button>
-          )}
-          {step === 'review' && (
-            <>
-              {file && (
-                <button onClick={() => setStep('upload')} style={secondaryBtnStyle}>← Back to Upload</button>
-              )}
-              <button 
-                onClick={handleApply} 
-                style={{ 
-                  ...primaryBtnStyle,
-                  background: isNewClient ? 'var(--primary, #c5b358)' : '#2e7d32' 
-                }}
-              >
-                {isNewClient ? 'Create Client' : 'Update Client'}
-              </button>
-            </>
-          )}
-          </div>
+            <button
+              onClick={handleAnalyse}
+              disabled={!file}
+              style={{ ...primaryBtnStyle, opacity: file ? 1 : 0.5 }}
+            >
+              Analyse PDF
+            </button>
+          </>
+        )}
+        {step === 'extracting' && (
+          <button onClick={onClose} style={secondaryBtnStyle}>Cancel</button>
+        )}
+        {step === 'review' && (
+          <>
+            {file && (
+              <button onClick={() => setStep('upload')} style={secondaryBtnStyle}>← Back to Upload</button>
+            )}
+            <button 
+              onClick={handleApply} 
+              style={{ 
+                ...primaryBtnStyle,
+                background: 'var(--primary, #c5b358)' 
+              }}
+            >
+              {isNewClient ? 'Create Client' : 'Update Client'}
+            </button>
+          </>
+        )}
         </div>
       </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </>
   );
 
-  return createPortal(modal, document.body);
+  if (variant === 'inline') {
+    return (
+      <div style={{
+        background: '#fff', 
+        width: '100%',
+        height: '100%',
+        display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+        {modalContent}
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  return createPortal(
+    <div className="modal-overlay" style={{ zIndex: 20000, paddingTop: '80px' }}>
+      <div className="modal-content">
+        {modalContent}
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>,
+    document.body
+  );
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────

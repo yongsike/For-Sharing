@@ -23,12 +23,9 @@ const RiskLevelInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose} style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-            backdropFilter: 'blur(4px)'
+            zIndex: 1000
         }}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                width: '100%', maxWidth: '600px', padding: '2.5rem',
+            <div className="modal-content modal-sm" onClick={(e) => e.stopPropagation()} style={{
                 background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)',
                 position: 'relative'
             }}>
@@ -37,9 +34,11 @@ const RiskLevelInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                     style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}
                 >&times;</button>
 
-                <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Risk Level Guide</h2>
+                <div className="modal-header">
+                    <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', marginBottom: '0', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Risk Level Guide</h2>
+                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="modal-body" style={{ gap: '1.5rem' }}>
                     {Object.entries(RISK_LEVEL_DESCRIPTIONS).map(([level, desc]) => (
                         <div key={level}>
                             <h4 style={{ color: 'var(--primary)', marginBottom: '6px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -59,13 +58,8 @@ const AIInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose} style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-            backdropFilter: 'blur(4px)'
-        }}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                width: '100%', maxWidth: '700px', padding: '2.5rem',
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
+            <div className="modal-content modal-sm" onClick={(e) => e.stopPropagation()} style={{
                 background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)',
                 position: 'relative'
             }}>
@@ -74,18 +68,20 @@ const AIInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
                     style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}
                 >&times;</button>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', margin: 0 }}>How Does AI Generate This Analysis?</h2>
+                <div className="modal-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '0', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', margin: 0 }}>How Does AI Generate This Analysis?</h2>
+                    </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="modal-body" style={{ gap: '1.5rem' }}>
                     <section>
                         <p style={{ fontSize: '0.9rem', color: 'var(--secondary)', lineHeight: '1.5', opacity: 0.85 }}>
                             Our AI synthesizes real-time data from four key pillars:
                         </p>
                         <ol style={{ fontSize: '0.85rem', color: 'var(--secondary)', opacity: 0.85, marginTop: '8px', paddingLeft: '20px' }}>
                             <li><strong>Risk Profile:</strong> Stated risk tolerance levels.</li>
-                            <li><strong>Investment Allocation:</strong> Asset distribution across classes.</li>
+                            <li><strong>Asset Allocation:</strong> Asset distribution across classes.</li>
                             <li><strong>Cashflow:</strong> Inflows, outflows, and net surplus capacity.</li>
                             <li><strong>Plans Held:</strong> Liquidity, lock-in periods, and coverage details.</li>
                         </ol>
@@ -103,7 +99,7 @@ const AIInfoModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
                         </div>
                     </section>
 
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: 'auto' }}>
                         This analysis is supplementary and should be reviewed by a professional advisor before informing any financial decisions.
                     </p>
                 </div>
@@ -128,25 +124,21 @@ const AIFeedbackModal: React.FC<{
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose} style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-            backdropFilter: 'blur(4px)'
-        }}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                width: '100%', maxWidth: '500px', padding: '2rem',
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
+            <div className="modal-content modal-sm" onClick={(e) => e.stopPropagation()} style={{
                 background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)',
-                position: 'relative',
-                maxHeight: '90vh',
-                overflowY: 'auto'
+                position: 'relative'
             }}>
                 <button
                     onClick={onClose}
                     style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: 'var(--text-muted)' }}
                 >&times;</button>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="modal-header">
                     <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', marginBottom: '0' }}>Was This Analysis Helpful?</h2>
+                </div>
+
+                <div className="modal-body" style={{ gap: '1rem' }}>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', lineHeight: '1.5' }}>
                         Your feedback helps us improve the relevance and accuracy of our AI-generated risk insights.
                     </p>
@@ -198,7 +190,7 @@ const AIFeedbackModal: React.FC<{
                                 </button>
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
                                 <textarea
                                     placeholder="Optional: How can we improve this result?"
                                     value={feedbackComment}
@@ -238,14 +230,6 @@ const AIFeedbackModal: React.FC<{
                                         cursor: (isSubmitting || rating === null) ? 'not-allowed' : 'pointer',
                                         opacity: (isSubmitting || rating === null) ? 0.7 : 1,
                                         transition: 'all 0.2s'
-                                    }}
-                                    onMouseOver={(e) => {
-                                        if (!isSubmitting && rating !== null) {
-                                            e.currentTarget.style.filter = 'brightness(0.9)';
-                                        }
-                                    }}
-                                    onMouseOut={(e) => {
-                                        e.currentTarget.style.filter = 'none';
                                     }}
                                 >
                                     {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
@@ -509,7 +493,7 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
                 // 2. Aggregate Active Plans for Analysis (Concise & Token-Efficient)
                 const activePlans = (client.client_plans || []).filter((p: any) => p.status === 'Active');
                 const allocationMap: Record<string, number> = {};
-                let totalInvestValue = 0;
+                let totalAssetValue = 0;
                 let totalSumAssured = 0;
                 let earliestStart: Date | null = null;
                 let latestEnd: Date | null = null;
@@ -517,11 +501,11 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
 
                 activePlans.forEach((plan: any) => {
                     const isInsurance = plan.asset_class?.includes('Insurance') || plan.sum_assured !== undefined;
-                    const valuations = isInsurance ? plan.insurance_valuations : plan.investment_valuations;
+                    const valuations = isInsurance ? (plan.insurance_valuations || []) : (plan.investment_valuations || []);
                     const valueKey = isInsurance ? 'cash_value' : 'market_value';
 
                     // 1. Track Types/Categories
-                    const cat = plan.asset_class || plan.policy_type;
+                    const cat = plan.asset_class || plan.policy_type || 'Other';
                     if (cat) activeCategories.add(cat);
 
                     // 2. Track Dates
@@ -542,8 +526,8 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
 
                     if (latestVal) {
                         const val = parseFloat(latestVal[valueKey] || 0);
-                        if (!isInsurance) {
-                            totalInvestValue += val;
+                        if (val > 0) {
+                            totalAssetValue += val;
                             allocationMap[cat] = (allocationMap[cat] || 0) + val;
                         }
                     }
@@ -552,36 +536,111 @@ const RiskProfile: React.FC<RiskProfileProps> = ({
                     }
                 });
 
-                const allocationString = totalInvestValue > 0
+                // Calculate historical portfolio performance (1 year comparison)
+                let portfolioPerformanceString = '';
+                const activeInvestments = activePlans.filter((p: any) => !p.asset_class?.includes('Insurance') && p.market_value !== undefined);
+                if (activeInvestments.length > 0) {
+                    let pastTotalValue = 0;
+                    let hasPastData = false;
+
+                    activeInvestments.forEach((plan: any) => {
+                        const valuations = plan.investment_valuations || [];
+                        if (valuations.length > 1) {
+                            const sortedVals = valuations.sort((a: any, b: any) =>
+                                new Date(b.as_of_date).getTime() - new Date(a.as_of_date).getTime()
+                            );
+                            
+                            // Get latest value
+                            const latestVal = parseFloat(sortedVals[0].market_value || 0);
+
+                            // Find a valuation closest to 1 year ago (365 days)
+                            const oneYearAgo = new Date();
+                            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                            
+                            // Find the first valuation that is older than or equal to 1 year ago
+                            let pastValRecord = sortedVals.find((v: any) => new Date(v.as_of_date) <= oneYearAgo);
+
+                            // If we don't have one that's exactly/older than 1 year, just take the oldest one we have 
+                            // as long as it's not the latest one.
+                            if (!pastValRecord && sortedVals.length > 0) {
+                                pastValRecord = sortedVals[sortedVals.length - 1];
+                            }
+
+                            if (pastValRecord && sortedVals[0].as_of_date !== pastValRecord.as_of_date) {
+                                pastTotalValue += parseFloat(pastValRecord.market_value || 0);
+                                hasPastData = true;
+                            } else {
+                                // If no past data, assume the past value was the same as current for the overall summation
+                                pastTotalValue += latestVal;
+                            }
+                        } else if (valuations.length === 1) {
+                             pastTotalValue += parseFloat(valuations[0].market_value || 0);
+                        }
+                    });
+
+                    if (hasPastData && pastTotalValue > 0) {
+                        const diff = totalAssetValue - pastTotalValue;
+                        const percentChange = ((diff / pastTotalValue) * 100).toFixed(1);
+                        const sign = diff >= 0 ? '+' : '';
+                        portfolioPerformanceString = `\n                       - Portfolio Value Change (Last 12 Months): ${sign}${percentChange}%`;
+                    }
+                }
+
+                const allocationString = totalAssetValue > 0
                     ? Object.entries(allocationMap)
                         .filter(([_, val]) => val > 0)
-                        .map(([category, val]) => `${Math.round((val / totalInvestValue) * 100)}% ${category}`)
+                        .map(([category, val]) => `${Math.round((val / totalAssetValue) * 100)}% ${category}`)
                         .join(', ')
                     : 'No allocation data';
 
-                const latestCashflow = client.cashflow?.sort((a: any, b: any) =>
+                const sortedCashflows = client.cashflow?.sort((a: any, b: any) =>
                     new Date(b.as_of_date).getTime() - new Date(a.as_of_date).getTime()
-                )[0];
+                ) || [];
+                
+                const latestCashflow = sortedCashflows[0];
+
+                // Calculate historical trend and volatility over the last 12 months
+                let historicalTrend = '';
+                const oneYearAgoThreshold = new Date();
+                oneYearAgoThreshold.setFullYear(oneYearAgoThreshold.getFullYear() - 1);
+
+                const recentCashflows = sortedCashflows.filter((cf: any) => new Date(cf.as_of_date) >= oneYearAgoThreshold);
+
+                if (recentCashflows.length > 1) {
+                    const avgSurplus = recentCashflows.reduce((sum: number, cf: any) => sum + (parseFloat(cf.net_surplus) || 0), 0) / recentCashflows.length;
+                    const avgInflow = recentCashflows.reduce((sum: number, cf: any) => sum + (parseFloat(cf.total_inflow) || 0), 0) / recentCashflows.length;
+                    
+                    // Volatility calculation (Standard Deviation of Net Surplus)
+                    let surplusVolatilityInfo = '';
+                    if (recentCashflows.length >= 3) {
+                       const surpluses = recentCashflows.map((cf: any) => parseFloat(cf.net_surplus) || 0);
+                       const variance = surpluses.reduce((sum: number, val: number) => sum + Math.pow(val - avgSurplus, 2), 0) / surpluses.length;
+                       const stdDev = Math.sqrt(variance);
+                       const stdDevPercent = avgSurplus !== 0 ? ((stdDev / Math.abs(avgSurplus)) * 100).toFixed(1) : '0';
+                       surplusVolatilityInfo = `, Net Surplus Std Dev: ${stdDevPercent}%`;
+                    }
+
+                    historicalTrend = `\n                       - Last 12 Months Average: Total Inflow ($${Math.round(avgInflow)}), Net Surplus ($${Math.round(avgSurplus)})${surplusVolatilityInfo}`;
+                }
 
                 const cashflowString = latestCashflow
-                    ? `Data as of ${new Date(latestCashflow.as_of_date).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' })}: 
-                       - Income Breakdown: Employment ($${latestCashflow.employment_income_gross}), Rental ($${latestCashflow.rental_income}), Investment ($${latestCashflow.investment_income}). Total Inflow: $${latestCashflow.total_inflow}
-                       - Expense Breakdown: Household ($${latestCashflow.household_expenses}), Tax ($${latestCashflow.income_tax}), Insurance ($${latestCashflow.insurance_premiums}), Property ($${latestCashflow.property_expenses}), Debt/Loan ($${latestCashflow.property_loan_repayment + latestCashflow.non_property_loan_repayment}). Total Expense: $${latestCashflow.total_expense}
-                       - Net State: Wealth Transfers ($${latestCashflow.wealth_transfers}), Net Surplus ($${latestCashflow.net_surplus}), Net Cashflow (post-investment/pensions) ($${latestCashflow.net_cashflow}).`
+                    ? `Current Cashflow Summary:
+                       - Income: Employment ($${latestCashflow.employment_income_gross}), Rental ($${latestCashflow.rental_income}), Investment ($${latestCashflow.investment_income}). Total Inflow: $${latestCashflow.total_inflow}
+                       - Expense: Household ($${latestCashflow.household_expenses}), Tax ($${latestCashflow.income_tax}), Insurance ($${latestCashflow.insurance_premiums}), Property ($${latestCashflow.property_expenses}), Debt/Loan ($${latestCashflow.property_loan_repayment + latestCashflow.non_property_loan_repayment}). Total Expense: $${latestCashflow.total_expense}
+                       - Net State: Wealth Transfers ($${latestCashflow.wealth_transfers}), Net Surplus ($${latestCashflow.net_surplus}), Net Cashflow (post-investment/pensions) ($${latestCashflow.net_cashflow}).${historicalTrend}`
                     : 'No cashflow data';
 
                 const plansString = activePlans.length > 0
-                    ? `Active Portfolio Summary:
-                       - Total Investment Value (Mkt): $${Math.round(totalInvestValue).toLocaleString()}
+                    ? `Current Portfolio Summary:
+                       - Total Assets: $${Math.round(totalAssetValue).toLocaleString()}
                        - Total Insurance Sum Assured: $${Math.round(totalSumAssured).toLocaleString()}
-                       - Coverage/Holding Period: ${earliestStart ? (earliestStart as Date).toLocaleDateString() : 'Unknown'} to ${latestEnd ? (latestEnd as Date).toLocaleDateString() : 'Ongoing'}
-                       - Plan Distribution: ${Array.from(activeCategories).join(', ')}`
+                       - Holding Period: ${earliestStart ? (earliestStart as Date).toLocaleDateString() : 'Unknown'} to ${latestEnd ? (latestEnd as Date).toLocaleDateString() : 'Ongoing'}
+                       - Plan Distribution: ${Array.from(activeCategories).join(', ')}${portfolioPerformanceString}`
                     : 'No active plans';
 
                 const params = {
-                    riskProfileCategory: client.risk_profile || 'Unknown',
                     riskProfileDescription: description,
-                    investmentAllocation: allocationString,
+                    assetAllocation: allocationString,
                     cashflow: cashflowString,
                     plansHeld: plansString,
                 };

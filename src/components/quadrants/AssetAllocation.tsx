@@ -261,20 +261,14 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
                 <div
                     className="modal-overlay animate-fade"
                     onClick={() => setIsModalOpen(false)}
-                    style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(6px)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
-                        paddingTop: '70px'
-                    }}
+                    style={{ zIndex: 9999 }}
                 >
                     <div
                         className="modal-content"
                         onClick={e => e.stopPropagation()}
                         style={{
-                            width: '95%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto',
-                            position: 'relative', padding: '1.5rem 2.5rem 3rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem',
-                            background: '#fff', borderRadius: '16px', boxShadow: 'var(--shadow-xl)'
+                            position: 'relative', display: 'flex', flexDirection: 'column', gap: '1.5rem',
+                            background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
                         }}
                     >
                         <button
@@ -282,10 +276,12 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
                             style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '10px', zIndex: 10 }}
                         >&times;</button>
 
-                        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                            <h2 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>Allocation Breakdown</h2>
+                        <div className="modal-header" style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                            <h2 style={{ marginBottom: '0.25rem', fontSize: '1.8rem' }}>Allocation Breakdown</h2>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{selectedSnapshot.fullDate}</p>
                         </div>
+
+                        <div className="modal-body">
 
                         <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: '4rem' }}>
                             <div style={{ flex: '1.2', minWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
@@ -413,21 +409,22 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ client, mode = 'overv
                                                                 <span>{plan.name}</span>
                                                                 <span>${plan.value.toLocaleString()}</span>
                                                             </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                    );
+                                                })}
                                             </div>
-                                        );
-                                    })}
-                                </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
-                </div>,
-                document.body
-            )}
-        </section >
-    );
+                </div>
+            </div>
+        </div>,
+        document.body
+    )}
+</section>
+);
 };
 
 export default AssetAllocation;

@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import './Dashboard.css';
+import { PdfImport } from './PdfImport';
 
 interface ClientDetailModalProps {
     client: any;
     onClose: () => void;
+    onUpdate?: () => void;
 }
 
 const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }) => {
     const [activeTab, setActiveTab] = useState<'personal' | 'family'>('personal');
+    const [mode, setMode] = useState<'view' | 'update'>('view');
 
     // Helper to format labels
     const formatLabel = (key: string) => {
@@ -47,7 +50,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
     };
 
     const renderSection = (title: string, fields: string[]) => (
-        <div className="modal-section" style={{ marginBottom: '2.5rem' }}>
+        <div className="modal-section" style={{ marginBottom: '1.5rem' }}>
             <h3 style={{
                 fontSize: '0.85rem',
                 color: 'var(--secondary)',
@@ -101,7 +104,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
         padding: '0.75rem 2rem',
         border: 'none',
         background: isActive ? 'var(--primary)' : 'transparent',
-        color: isActive ? (isActive ? '#fff' : 'var(--text-muted)') : 'var(--text-muted)',
+        color: isActive ? '#fff' : 'var(--text-muted)',
         borderRadius: '10px',
         fontWeight: 600,
         fontSize: '0.9rem',
@@ -111,16 +114,37 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
         textAlign: 'center' as const
     });
 
+    if (mode === 'update') {
+        return (
+            <div className="modal-overlay animate-fade" onClick={onClose} style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: 'rgba(26, 26, 26, 0.7)', backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000,
+                padding: '80px 20px 20px 20px'
+            }}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+                    width: '100%', maxWidth: '900px', maxHeight: '85vh', overflow: 'hidden',
+                    position: 'relative', display: 'flex', flexDirection: 'column',
+                    background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
+                }}>
+                    <PdfImport 
+                        clientId={client.client_id}
+                        variant="inline"
+                        onClose={() => setMode('view')}
+                        onSuccess={() => {
+                            // On success, refresh the page to update dashboard data
+                            window.location.reload();
+                        }}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="modal-overlay animate-fade" onClick={onClose} style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(26, 26, 26, 0.7)', backdropFilter: 'blur(8px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000,
-            padding: '80px 20px 20px 20px'
-        }}>
+        <div className="modal-overlay animate-fade" onClick={onClose} style={{ zIndex: 10000 }}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                width: '100%', maxWidth: '900px', maxHeight: '85vh', overflowY: 'auto',
-                position: 'relative', padding: '2rem 3rem', display: 'flex', flexDirection: 'column',
+                position: 'relative', display: 'flex', flexDirection: 'column',
                 background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
             }}>
                 <button
@@ -129,121 +153,157 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
                     style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', fontSize: '2rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '5px', zIndex: 10 }}
                 >&times;</button>
 
-                <div className="modal-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                        <h2 style={{ fontSize: '2rem', color: 'var(--secondary)', marginBottom: '4px' }}>{client.full_name}</h2>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', letterSpacing: '0.02em' }}>
-                            Client Identification No.: <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>{client.client_id}</span>
-                        </p>
-                    </div>
-                    <div style={{ textAlign: 'right', paddingRight: '40px' }}>
-                        <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, display: 'block', marginBottom: '4px', letterSpacing: '0.05em' }}>Last Updated</span>
-                        <span style={{ fontSize: '1rem', color: 'var(--secondary)', fontWeight: 600 }}>
-                            {renderValue('last_updated', client.last_updated)}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Tabs Switcher - Segmented Control Style */}
-                <div className="tabs-switcher" style={{
-                    display: 'flex',
-                    marginBottom: '2.5rem',
-                    width: '100%',
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    borderRadius: '12px',
-                    padding: '4px',
-                    gap: 0
-                }}>
-                    <button
-                        style={tabButtonStyle(activeTab === 'personal')}
-                        onClick={() => setActiveTab('personal')}
-                    >
-                        Personal
-                    </button>
-                    <button
-                        style={tabButtonStyle(activeTab === 'family')}
-                        onClick={() => setActiveTab('family')}
-                    >
-                        Family
-                    </button>
-                </div>
-
-                {activeTab === 'personal' ? (
-                    <>
-                        {renderSection('Basic Information', basicFields)}
-                        {renderSection('Contact Information and Other Information', contactFields)}
-                        {renderSection('Residential Address', addressFields)}
-                    </>
-                ) : (
-                    <div className="family-section">
-                        {!client.client_family || client.client_family.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
-                                No family members found for this client.
-                            </div>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                                {client.client_family.map((member: any, idx: number) => (
-                                    <div key={idx} className="family-member-card" style={{
-                                        padding: '1.5rem',
-                                        background: 'rgba(0, 0, 0, 0.02)',
-                                        borderRadius: '16px',
-                                        border: '1px solid var(--border)'
-                                    }}>
-                                        <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                                            <h4 style={{ fontSize: '1.2rem', color: 'var(--secondary)', margin: 0 }}>{member.family_member_name}</h4>
-                                        </div>
-
-                                        <div style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                                            gap: '1.25rem 2rem'
-                                        }}>
-                                            {[
-                                                { label: 'Relationship', value: member.relationship },
-                                                { label: 'Gender', value: member.gender },
-                                                { label: 'Date of Birth', value: renderValue('date_of_birth', member.date_of_birth) },
-                                                { label: 'Age', value: member.age },
-                                                {
-                                                    label: 'Monthly Upkeep',
-                                                    value: (member.support_until_age && member.age >= member.support_until_age) || !member.monthly_upkeep || member.monthly_upkeep <= 0
-                                                        ? '-'
-                                                        : `$${(member.monthly_upkeep || 0).toLocaleString()}`
-                                                },
-                                                {
-                                                    label: 'Support Until Age',
-                                                    value: member.support_until_age
-                                                        ? `${member.support_until_age} (${member.age >= member.support_until_age ? 'Completed' : `${member.years_to_support} Yrs Left`})`
-                                                        : '-'
-                                                }
-                                            ].map((field, fIdx) => (
-                                                <div key={fIdx} className="info-item">
-                                                    <label style={{
-                                                        display: 'block',
-                                                        fontSize: '0.65rem',
-                                                        textTransform: 'uppercase',
-                                                        color: 'var(--text-muted)',
-                                                        fontWeight: 700,
-                                                        letterSpacing: '0.05em',
-                                                        marginBottom: '4px'
-                                                    }}>
-                                                        {field.label}
-                                                    </label>
-                                                    <div style={{
-                                                        fontSize: '0.95rem',
-                                                        color: 'var(--secondary)',
-                                                        fontWeight: 500
-                                                    }}>
-                                                        {field.value}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                {/* Fixed Header Area */}
+                <div className="modal-header">
+                    <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                            <h2 style={{ fontSize: '1.8rem', color: 'var(--secondary)', marginBottom: '8px' }}>{client.full_name}</h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', letterSpacing: '0.02em', margin: 0 }}>
+                                    Client ID: <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>{client.client_id}</span>
+                                </p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Last Updated:</span>
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--secondary)', fontWeight: 600 }}>
+                                            {renderValue('last_updated', client.last_updated)}
+                                        </span>
                                     </div>
-                                ))}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMode('update');
+                                        }}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            padding: '4px 16px',
+                                            background: 'var(--primary, #c5b358)',
+                                            color: '#fff',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            boxShadow: '0 2px 8px rgba(197, 179, 88, 0.2)',
+                                            transition: 'all 0.2s',
+                                            letterSpacing: '0.02em',
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                        onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        Update
+                                    </button>
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
-                )}
+
+                    {/* Tabs Switcher - Segmented Control Style */}
+                    <div className="tabs-switcher" style={{
+                        display: 'flex',
+                        marginBottom: '1.5rem',
+                        width: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        borderRadius: '12px',
+                        padding: '4px',
+                        gap: 0
+                    }}>
+                        <button
+                            style={tabButtonStyle(activeTab === 'personal')}
+                            onClick={() => setActiveTab('personal')}
+                        >
+                            Personal
+                        </button>
+                        <button
+                            style={tabButtonStyle(activeTab === 'family')}
+                            onClick={() => setActiveTab('family')}
+                        >
+                            Family
+                        </button>
+                    </div>
+                </div>
+
+                {/* Scrollable Content Area */}
+                <div className="modal-body">
+                    {activeTab === 'personal' ? (
+                        <>
+                            {renderSection('Basic Information', basicFields)}
+                            {renderSection('Contact Information and Other Information', contactFields)}
+                            {renderSection('Residential Address', addressFields)}
+                        </>
+                    ) : (
+                        <div className="family-section">
+                            {!client.client_family || client.client_family.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+                                    No family members found for this client.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                    {client.client_family.map((member: any, idx: number) => (
+                                        <div key={idx} className="family-member-card" style={{
+                                            padding: '1.5rem',
+                                            background: 'rgba(0, 0, 0, 0.02)',
+                                            borderRadius: '16px',
+                                            border: '1px solid var(--border)'
+                                        }}>
+                                            <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                                                <h4 style={{ fontSize: '1.2rem', color: 'var(--secondary)', margin: 0 }}>{member.family_member_name}</h4>
+                                            </div>
+
+                                            <div style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                                gap: '1.25rem 2rem'
+                                            }}>
+                                                {[
+                                                    { label: 'Relationship', value: member.relationship },
+                                                    { label: 'Gender', value: member.gender },
+                                                    { label: 'Date of Birth', value: renderValue('date_of_birth', member.date_of_birth) },
+                                                    { label: 'Age', value: member.age },
+                                                    {
+                                                        label: 'Monthly Upkeep',
+                                                        value: (member.support_until_age && member.age >= member.support_until_age) || !member.monthly_upkeep || member.monthly_upkeep <= 0
+                                                            ? '-'
+                                                            : `$${(member.monthly_upkeep || 0).toLocaleString()}`
+                                                    },
+                                                    {
+                                                        label: 'Support Until Age',
+                                                        value: member.support_until_age
+                                                            ? `${member.support_until_age} (${member.age >= member.support_until_age ? 'Completed' : `${member.years_to_support} Yrs Left`})`
+                                                            : '-'
+                                                    }
+                                                ].map((field, fIdx) => (
+                                                    <div key={fIdx} className="info-item">
+                                                        <label style={{
+                                                            display: 'block',
+                                                            fontSize: '0.65rem',
+                                                            textTransform: 'uppercase',
+                                                            color: 'var(--text-muted)',
+                                                            fontWeight: 700,
+                                                            letterSpacing: '0.05em',
+                                                            marginBottom: '4px'
+                                                        }}>
+                                                            {field.label}
+                                                        </label>
+                                                        <div style={{
+                                                            fontSize: '0.95rem',
+                                                            color: 'var(--secondary)',
+                                                            fontWeight: 500
+                                                        }}>
+                                                            {field.value}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -317,36 +377,6 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
                     <div className="client-details">
                         <h1 style={{ fontSize: '1.5rem', margin: 0 }}>{client.full_name}</h1>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Click for profile details</p>
-                        {onImportPdf && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onImportPdf();
-                                }}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    padding: '6px 14px',
-                                    background: 'var(--primary, #c5b358)',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    marginTop: '8px',
-                                }}
-                            >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="12" y1="18" x2="12" y2="12"></line>
-                                    <line x1="9" y1="15" x2="15" y2="15"></line>
-                                </svg>
-                                Update Client Info
-                            </button>
-                        )}
                     </div>
                 </div>
 
@@ -518,6 +548,7 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
                 <ClientDetailModal
                     client={client}
                     onClose={() => setIsModalOpen(false)}
+                    onUpdate={onImportPdf}
                 />,
                 document.body
             )}
