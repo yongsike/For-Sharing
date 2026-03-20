@@ -153,7 +153,7 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
         <>
             <section className={`glass-card quadrant ${mode === 'focused' ? 'focused' : ''}`}>
                 <div className="card-header">
-                    <h3>Cashflow Analysis</h3>
+                    <h3>Cashflow</h3>
                 </div>
 
                 <div className="chart-container" style={{ flex: 1, position: 'relative', minHeight: 0 }}>

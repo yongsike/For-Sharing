@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthProvider';
 import ClientHeader from './ClientHeader';
 import PlansHeld from './quadrants/PlansHeld';
-import RiskProfile from './quadrants/RiskProfile';
+import Insights from './quadrants/Insights';
 import Cashflow from './quadrants/Cashflow';
 import AssetAllocation from './quadrants/AssetAllocation';
 import { PdfImport } from './PdfImport';
@@ -22,9 +22,11 @@ const Dashboard: React.FC = () => {
     const [riskAnalysisCache, setRiskAnalysisCache] = useState<Record<string, {
         overview?: string;
         focused?: any;
+        meetingNotes?: any;
     }>>({});
     const [absoluteBounds, setAbsoluteBounds] = useState<{ start: string; end: string } | null>(null);
     const [showPdfImport, setShowPdfImport] = useState(false);
+    const [insightsMode, setInsightsMode] = useState<'risk-analysis' | 'meeting-notes'>('risk-analysis');
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newStart = e.target.value;
@@ -256,13 +258,15 @@ const Dashboard: React.FC = () => {
                 <PlansHeld client={client} mode="overview" dateRange={dateRange} />
             </Link>
             <Link to={`/${clientId}/risk`} className="quadrant-link">
-                <RiskProfile
+                <Insights
                     clientId={clientId}
                     client={client}
                     mode="overview"
                     dateRange={dateRange}
                     cache={riskAnalysisCache[clientId!]}
                     onCacheUpdate={handleRiskCacheUpdate}
+                    insightsMode={insightsMode}
+                    onInsightsModeChange={setInsightsMode}
                 />
             </Link>
         </main>
@@ -274,13 +278,15 @@ const Dashboard: React.FC = () => {
             case 'cashflow': return <Cashflow client={client} mode="focused" dateRange={dateRange} />;
             case 'plans': return <PlansHeld client={client} mode="focused" dateRange={dateRange} />;
             case 'risk': return (
-                <RiskProfile
+                <Insights
                     clientId={clientId}
                     client={client}
                     mode="focused"
                     dateRange={dateRange}
                     cache={riskAnalysisCache[clientId!]}
                     onCacheUpdate={handleRiskCacheUpdate}
+                    insightsMode={insightsMode}
+                    onInsightsModeChange={setInsightsMode}
                 />
             );
             default: return null;

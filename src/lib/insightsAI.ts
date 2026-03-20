@@ -40,7 +40,16 @@ export async function* generateRiskSummary(params: RiskAnalysisParams) {
   yield* baseGenerateStream(params, '/ai/risk-summary');
 }
 
+export interface MeetingNotesParams extends RiskAnalysisParams {
+  transcript: string;
+}
+
+export async function* generateMeetingNotes(params: MeetingNotesParams) {
+  yield* baseGenerateStream(params, '/ai/meeting-notes');
+}
+
 export async function submitAIFeedback(payload: {
+
   client_id: string;
   rating: boolean;
   comment?: string;

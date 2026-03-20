@@ -25,8 +25,9 @@ vi.mock('../components/quadrants/PlansHeld', () => ({
     default: () => <div data-testid="plans-held">PlansHeld Mock</div>,
 }));
 
-vi.mock('../components/quadrants/RiskProfile', () => ({
-    default: () => <div data-testid="risk-profile">RiskProfile Mock</div>,
+vi.mock('../components/quadrants/Insights', () => ({
+    __esModule: true,
+    default: () => <div data-testid="risk-profile">Insights Mock</div>,
 }));
 
 vi.mock('../components/quadrants/Cashflow', () => ({
