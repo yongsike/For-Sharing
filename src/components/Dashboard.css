@@ -756,7 +756,7 @@
 /* Custom Select Styles */
 .custom-select-wrapper {
     position: relative;
-    min-width: 160px;
+    width: 100%;
 }
 
 .custom-select-trigger {
@@ -808,12 +808,15 @@
 }
 
 .custom-select-option {
-    padding: 0.6rem 0.8rem;
-    border-radius: 6px;
+    padding: 0.61rem 0.8rem;
+    border-radius: 0;
     font-size: 0.85rem;
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .custom-select-option:hover {
@@ -898,6 +901,7 @@ input[type="date"]::-webkit-datetime-edit-day-field:focus {
     opacity: 1;
     text-decoration: underline;
 }
+
 /* Insights Quadrant Improvements */
 .meeting-input-container {
     position: relative;

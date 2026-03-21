@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { apiClient } from './apiClient';
 
 export interface PdfExtractedData {
   client: {
@@ -458,23 +459,15 @@ async function writeRelatedData(
  * Call the backend OCR endpoint with a PDF file.
  */
 export async function parsePdfViaBackend(
-  file: File,
-  accessToken: string
+  file: File
 ): Promise<PdfExtractedData> {
-  const backendUrl = import.meta.env.VITE_AI_BACKEND_URL || 'http://localhost:8080';
   const formData = new FormData();
   formData.append('pdf', file);
 
-  const res = await fetch(`${backendUrl}/ai/ocr`, {
+  const res = await apiClient('/ai/ocr', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
     body: formData,
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `OCR request failed (${res.status})`);
-  }
 
   const json = await res.json();
   return json.data as PdfExtractedData;

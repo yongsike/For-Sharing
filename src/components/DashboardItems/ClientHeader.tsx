@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
-import './Dashboard.css';
+import '../Dashboard.css';
+import { FocusModal } from '../UI/FocusModal';
 import { PdfImport } from './PdfImport';
 
 interface ClientDetailModalProps {
@@ -116,191 +116,177 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
 
     if (mode === 'update') {
         return (
-            <div className="modal-overlay animate-fade" onClick={onClose} style={{ zIndex: 10000 }}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                    position: 'relative', display: 'flex', flexDirection: 'column',
-                    background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
-                }}>
-                    <PdfImport 
-                        clientId={client.client_id}
-                        variant="inline"
-                        onClose={onClose}
-                        onCancel={() => setMode('view')}
-                        onSuccess={() => {
-                            // On success, refresh the page to update dashboard data
-                            window.location.reload();
-                        }}
-                    />
-                </div>
-            </div>
+            <FocusModal isOpen={true} onClose={onClose} modalContentStyle={{ gap: 0 }}>
+                <PdfImport
+                    clientId={client.client_id}
+                    variant="inline"
+                    onClose={onClose}
+                    onCancel={() => setMode('view')}
+                    onSuccess={() => {
+                        window.location.reload();
+                    }}
+                />
+            </FocusModal>
         );
     }
 
     return (
-        <div className="modal-overlay animate-fade" onClick={onClose} style={{ zIndex: 10000 }}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
-                position: 'relative', display: 'flex', flexDirection: 'column',
-                background: '#fff', borderRadius: '24px', boxShadow: 'var(--shadow-xl)'
-            }}>
-                <button
-                    onClick={onClose}
-                    className="modal-close-btn"
-                    style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', fontSize: '2rem', cursor: 'pointer', color: 'var(--text-muted)', padding: '5px', zIndex: 10 }}
-                >&times;</button>
-
-                {/* Fixed Header Area */}
-                <div className="modal-header">
-                    <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ flex: 1 }}>
-                            <h2 style={{ fontSize: '1.8rem', color: 'var(--secondary)', marginBottom: '8px' }}>{client.full_name}</h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', letterSpacing: '0.02em', margin: 0 }}>
-                                    Client ID: <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>{client.client_id}</span>
-                                </p>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Last Updated:</span>
-                                        <span style={{ fontSize: '0.9rem', color: 'var(--secondary)', fontWeight: 600 }}>
-                                            {renderValue('last_updated', client.last_updated)}
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setMode('update');
-                                        }}
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            padding: '2px 12px',
-                                            background: 'var(--primary, #c5b358)',
-                                            color: '#fff',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 600,
-                                            cursor: 'pointer',
-                                            boxShadow: '0 2px 8px rgba(197, 179, 88, 0.2)',
-                                            transition: 'all 0.2s',
-                                            letterSpacing: '0.02em',
-                                        }}
-                                        onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                                        onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                    >
-                                        Update
-                                    </button>
+        <FocusModal
+            isOpen={true}
+            onClose={onClose}
+        >
+            {/* Fixed Header Area */}
+            <div className="modal-header">
+                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                        <h2 style={{ fontSize: '1.8rem', color: 'var(--secondary)', marginBottom: '8px' }}>{client.full_name}</h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', letterSpacing: '0.02em', margin: 0 }}>
+                                Client ID: <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>{client.client_id}</span>
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Last Updated:</span>
+                                    <span style={{ fontSize: '0.9rem', color: 'var(--secondary)', fontWeight: 600 }}>
+                                        {renderValue('last_updated', client.last_updated)}
+                                    </span>
                                 </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMode('update');
+                                    }}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '2px 12px',
+                                        background: 'var(--primary, #c5b358)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        boxShadow: '0 2px 8px rgba(197, 179, 88, 0.2)',
+                                        transition: 'all 0.2s',
+                                        letterSpacing: '0.02em',
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                >
+                                    Update
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    {/* Tabs Switcher - Segmented Control Style */}
-                    <div className="tabs-switcher" style={{
-                        display: 'flex',
-                        marginBottom: '0.5rem',
-                        width: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                        borderRadius: '12px',
-                        padding: '4px',
-                        gap: 0
-                    }}>
-                        <button
-                            style={tabButtonStyle(activeTab === 'personal')}
-                            onClick={() => setActiveTab('personal')}
-                        >
-                            Personal
-                        </button>
-                        <button
-                            style={tabButtonStyle(activeTab === 'family')}
-                            onClick={() => setActiveTab('family')}
-                        >
-                            Family
-                        </button>
-                    </div>
                 </div>
 
-                {/* Scrollable Content Area */}
-                <div className="modal-body">
-                    {activeTab === 'personal' ? (
-                        <>
-                            {renderSection('Basic Information', basicFields)}
-                            {renderSection('Contact Information and Other Information', contactFields)}
-                            {renderSection('Residential Address', addressFields)}
-                        </>
-                    ) : (
-                        <div className="family-section">
-                            {!client.client_family || client.client_family.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
-                                    No family members found for this client.
-                                </div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                                    {client.client_family.map((member: any, idx: number) => (
-                                        <div key={idx} className="family-member-card" style={{
-                                            padding: '1.5rem',
-                                            background: 'rgba(0, 0, 0, 0.02)',
-                                            borderRadius: '16px',
-                                            border: '1px solid var(--border)'
-                                        }}>
-                                            <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                                                <h4 style={{ fontSize: '1.2rem', color: 'var(--secondary)', margin: 0 }}>{member.family_member_name}</h4>
-                                            </div>
-
-                                            <div style={{
-                                                display: 'grid',
-                                                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                                                gap: '1.25rem 2rem'
-                                            }}>
-                                                {[
-                                                    { label: 'Relationship', value: member.relationship },
-                                                    { label: 'Gender', value: member.gender },
-                                                    { label: 'Date of Birth', value: renderValue('date_of_birth', member.date_of_birth) },
-                                                    { label: 'Age', value: member.age },
-                                                    {
-                                                        label: 'Monthly Upkeep',
-                                                        value: (member.support_until_age && member.age >= member.support_until_age) || !member.monthly_upkeep || member.monthly_upkeep <= 0
-                                                            ? '-'
-                                                            : `$${(member.monthly_upkeep || 0).toLocaleString()}`
-                                                    },
-                                                    {
-                                                        label: 'Support Until Age',
-                                                        value: member.support_until_age
-                                                            ? `${member.support_until_age} (${member.age >= member.support_until_age ? 'Completed' : `${member.years_to_support} Yrs Left`})`
-                                                            : '-'
-                                                    }
-                                                ].map((field, fIdx) => (
-                                                    <div key={fIdx} className="info-item">
-                                                        <label style={{
-                                                            display: 'block',
-                                                            fontSize: '0.65rem',
-                                                            textTransform: 'uppercase',
-                                                            color: 'var(--text-muted)',
-                                                            fontWeight: 700,
-                                                            letterSpacing: '0.05em',
-                                                            marginBottom: '4px'
-                                                        }}>
-                                                            {field.label}
-                                                        </label>
-                                                        <div style={{
-                                                            fontSize: '0.95rem',
-                                                            color: 'var(--secondary)',
-                                                            fontWeight: 500
-                                                        }}>
-                                                            {field.value}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                {/* Tabs Switcher - Segmented Control Style */}
+                <div className="tabs-switcher" style={{
+                    display: 'flex',
+                    marginBottom: '0.5rem',
+                    width: '100%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    borderRadius: '12px',
+                    padding: '4px',
+                    gap: 0
+                }}>
+                    <button
+                        style={tabButtonStyle(activeTab === 'personal')}
+                        onClick={() => setActiveTab('personal')}
+                    >
+                        Personal
+                    </button>
+                    <button
+                        style={tabButtonStyle(activeTab === 'family')}
+                        onClick={() => setActiveTab('family')}
+                    >
+                        Family
+                    </button>
                 </div>
             </div>
-        </div>
+
+            {/* Scrollable Content Area */}
+            <div className="modal-body">
+                {activeTab === 'personal' ? (
+                    <>
+                        {renderSection('Basic Information', basicFields)}
+                        {renderSection('Contact Information and Other Information', contactFields)}
+                        {renderSection('Residential Address', addressFields)}
+                    </>
+                ) : (
+                    <div className="family-section">
+                        {!client.client_family || client.client_family.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.02)', borderRadius: '12px' }}>
+                                No family members found for this client.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                {client.client_family.map((member: any, idx: number) => (
+                                    <div key={idx} className="family-member-card" style={{
+                                        padding: '1.5rem',
+                                        background: 'rgba(0, 0, 0, 0.02)',
+                                        borderRadius: '16px',
+                                        border: '1px solid var(--border)'
+                                    }}>
+                                        <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                                            <h4 style={{ fontSize: '1.2rem', color: 'var(--secondary)', margin: 0 }}>{member.family_member_name}</h4>
+                                        </div>
+
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                            gap: '1.25rem 2rem'
+                                        }}>
+                                            {[
+                                                { label: 'Relationship', value: member.relationship },
+                                                { label: 'Gender', value: member.gender },
+                                                { label: 'Date of Birth', value: renderValue('date_of_birth', member.date_of_birth) },
+                                                { label: 'Age', value: member.age },
+                                                {
+                                                    label: 'Monthly Upkeep',
+                                                    value: (member.support_until_age && member.age >= member.support_until_age) || !member.monthly_upkeep || member.monthly_upkeep <= 0
+                                                        ? '-'
+                                                        : `$${(member.monthly_upkeep || 0).toLocaleString()}`
+                                                },
+                                                {
+                                                    label: 'Support Until Age',
+                                                    value: member.support_until_age
+                                                        ? `${member.support_until_age} (${member.age >= member.support_until_age ? 'Completed' : `${member.years_to_support} Yrs Left`})`
+                                                        : '-'
+                                                }
+                                            ].map((field, fIdx) => (
+                                                <div key={fIdx} className="info-item">
+                                                    <label style={{
+                                                        display: 'block',
+                                                        fontSize: '0.65rem',
+                                                        textTransform: 'uppercase',
+                                                        color: 'var(--text-muted)',
+                                                        fontWeight: 700,
+                                                        letterSpacing: '0.05em',
+                                                        marginBottom: '4px'
+                                                    }}>
+                                                        {field.label}
+                                                    </label>
+                                                    <div style={{
+                                                        fontSize: '0.95rem',
+                                                        color: 'var(--secondary)',
+                                                        fontWeight: 500
+                                                    }}>
+                                                        {field.value}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </FocusModal>
     );
 };
 
@@ -539,13 +525,12 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
                 </div>
             </header>
 
-            {isModalOpen && createPortal(
+            {isModalOpen && (
                 <ClientDetailModal
                     client={client}
                     onClose={() => setIsModalOpen(false)}
                     onUpdate={onImportPdf}
-                />,
-                document.body
+                />
             )}
         </>
     );

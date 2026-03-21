@@ -1,197 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, Link, useParams } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import { useAuth } from '../lib/AuthProvider';
-import ClientHeader from './ClientHeader';
-import PlansHeld from './quadrants/PlansHeld';
-import Insights from './quadrants/Insights';
-import Cashflow from './quadrants/Cashflow';
-import AssetAllocation from './quadrants/AssetAllocation';
-import { PdfImport } from './PdfImport';
+import ClientHeader from './DashboardItems/ClientHeader';
+import PlansHeld from './DashboardItems/PlansHeld';
+import Insights from './DashboardItems/Insights';
+import Cashflow from './DashboardItems/Cashflow';
+import AssetAllocation from './DashboardItems/AssetAllocation';
+import { PdfImport } from './DashboardItems/PdfImport';
+import { useDashboardData } from '../hooks/useDashboardData';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
     const { clientId } = useParams<{ clientId: string }>();
-    const { user } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
-    const [client, setClient] = useState<any>(null);
-    const [loading, setLoading] = useState(!!clientId);
-    const [startDate, setStartDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
-    const [riskAnalysisCache, setRiskAnalysisCache] = useState<Record<string, {
-        overview?: string;
-        focused?: any;
-        meetingNotes?: any;
-        meetingNotesSummary?: string;
-        meetingNotesTranscript?: string;
-    }>>({});
-    const [absoluteBounds, setAbsoluteBounds] = useState<{ start: string; end: string } | null>(null);
     const [showPdfImport, setShowPdfImport] = useState(false);
-    const [insightsMode, setInsightsMode] = useState<'risk-analysis' | 'meeting-notes'>('risk-analysis');
 
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newStart = e.target.value;
-        setStartDate(newStart);
-        // Ensure start date is not after end date
-        if (newStart && endDate && newStart > endDate) {
-            setEndDate(newStart);
-        }
-    };
-
-    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newEnd = e.target.value;
-        setEndDate(newEnd);
-        // Ensure end date is not before start date
-        if (newEnd && startDate && newEnd < startDate) {
-            setStartDate(newEnd);
-        }
-    };
-
-    // Clear Insights cache for the current client when the date range changes
-    // This allows re-analysis for the new time context
-    useEffect(() => {
-        if (!clientId) return;
-        setRiskAnalysisCache(prev => {
-            const clientCache = prev[clientId];
-            if (!clientCache) return prev;
-
-            // Only clear the cache if we have one for this specific client
-            return {
-                ...prev,
-                [clientId]: {} // Reset the cache object for this client
-            };
-        });
-    }, [startDate, endDate, clientId]);
-
-    useEffect(() => {
-        const fetchClientData = async () => {
-            if (!clientId) return;
-            setLoading(true);
-            try {
-                // Fetch structured relational data from Supabase
-                const { data, error } = await supabase
-                    .from('clients')
-                    .select(`
-                        *,
-                        client_family (*),
-                        client_investments (
-                            *,
-                            investment_valuations (
-                                current_value,
-                                as_of_date
-                            )
-                        ),
-                        client_insurance (
-                            *,
-                            insurance_valuations (
-                                current_value,
-                                as_of_date
-                            )
-                        ),
-                        cashflow (
-                            as_of_date,
-                            employment_income_gross,
-                            rental_income,
-                            investment_income,
-                            household_expenses,
-                            income_tax,
-                            insurance_premiums,
-                            property_expenses,
-                            property_loan_repayment,
-                            non_property_loan_repayment,
-                            cpf_contribution_total,
-                            regular_investments,
-                            total_inflow,
-                            total_expense,
-                            wealth_transfers,
-                            net_surplus,
-                            net_cashflow
-                        )
-                    `)
-                    .eq('client_id', clientId)
-                    .single();
-
-                if (error) throw error;
-
-                // Staff can only view their assigned clients; admins can view all
-                if (data && user && !user.admin) {
-                    if (!user.userId || data.assigned_user_id !== user.userId) {
-                        setClient(null);
-                        setLoading(false);
-                        return;
-                    }
-                }
-
-                if (data) {
-                    // Map new schema to old structure for backward compatibility with child components
-                    data.family_members_count = data.client_family?.length || 0;
-                    data.full_name = data.name_as_per_id;
-
-                    const mappedInvestments = (data.client_investments || []).map((inv: any) => ({
-                        ...inv,
-                        plan_id: inv.policy_id,
-                        plan_name: inv.policy_name,
-                        asset_class: inv.policy_type,
-                        start_date: inv.start_date,
-                        end_date: inv.expiry_date,
-                        investment_valuations: (inv.investment_valuations || []).map((v: any) => ({
-                            ...v,
-                            market_value: v.current_value
-                        }))
-                    }));
-
-                    const mappedInsurance = (data.client_insurance || []).map((ins: any) => ({
-                        ...ins,
-                        plan_id: ins.policy_id,
-                        plan_name: ins.policy_name,
-                        asset_class: ins.policy_type,
-                        start_date: ins.start_date,
-                        end_date: ins.expiry_date,
-                        insurance_valuations: (ins.insurance_valuations || []).map((v: any) => ({
-                            ...v,
-                            cash_value: v.current_value,
-                            // Fallbacks for missing benefit columns in new schema
-                            death_benefit: ins.sum_assured || 0,
-                            critical_illness_benefit: 0,
-                            disability_benefit: 0
-                        }))
-                    }));
-
-                    data.client_plans = [...mappedInvestments, ...mappedInsurance];
-
-                    // Calculate absolute bounds for date filtering
-                    const allDates: string[] = [];
-                    data.cashflow?.forEach((c: any) => allDates.push(c.as_of_date));
-                    data.client_plans.forEach((p: any) => {
-                        if (p.start_date) allDates.push(p.start_date);
-                        if (p.end_date) allDates.push(p.end_date);
-                    });
-
-                    if (allDates.length > 0) {
-                        const sorted = allDates.map(d => d.substring(0, 10)).sort();
-                        const bounds = {
-                            start: sorted[0],
-                            end: sorted[sorted.length - 1]
-                        };
-                        setAbsoluteBounds(bounds);
-
-                        // Default to Max Range on load
-                        setStartDate(bounds.start);
-                        setEndDate(bounds.end);
-                    }
-
-                    setClient(data);
-                }
-            } catch (err) {
-                console.error('Error fetching comprehensive client data:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchClientData();
-    }, [clientId]);
+    const {
+        client,
+        loading,
+        startDate,
+        endDate,
+        absoluteBounds,
+        riskAnalysisCache,
+        insightsMode,
+        setInsightsMode,
+        handleStartDateChange,
+        handleEndDateChange,
+        handleRiskCacheUpdate,
+        handleSetMaxRange,
+        refreshData
+    } = useDashboardData(clientId);
 
     // Map the pathname to a quadrantId (removing the leading slash and clientId)
     const quadrantId = location.pathname.split('/').pop();
@@ -252,17 +90,10 @@ const Dashboard: React.FC = () => {
             </div>
         );
     }
+
     if (!client && !loading) return <div className="error-text">Client not found.</div>;
 
     const dateRange = { startDate, endDate };
-
-    const handleRiskCacheUpdate = (update: { overview?: string; focused?: any }) => {
-        if (!clientId) return;
-        setRiskAnalysisCache(prev => ({
-            ...prev,
-            [clientId]: { ...(prev[clientId] || {}), ...update }
-        }));
-    };
 
     const renderFullGrid = () => (
         <main className="dashboard-grid">
@@ -325,12 +156,7 @@ const Dashboard: React.FC = () => {
                 endDate={endDate}
                 onStartDateChange={handleStartDateChange}
                 onEndDateChange={handleEndDateChange}
-                onSetMaxRange={() => {
-                    if (absoluteBounds) {
-                        setStartDate(absoluteBounds.start);
-                        setEndDate(absoluteBounds.end);
-                    }
-                }}
+                onSetMaxRange={handleSetMaxRange}
                 absoluteBounds={absoluteBounds}
                 onImportPdf={() => setShowPdfImport(true)}
             />
@@ -349,11 +175,8 @@ const Dashboard: React.FC = () => {
                     onClose={() => setShowPdfImport(false)}
                     onSuccess={() => {
                         setShowPdfImport(false);
-                        // Refresh client data
-                        setClient(null);
-                        setLoading(true);
-                        // Trigger re-fetch by temporarily clearing clientId effect
-                        window.location.reload();
+                        // Refresh client data via hook instead of hard reload if possible
+                        refreshData();
                     }}
                 />
             )}
