@@ -17,24 +17,24 @@ vi.mock('../lib/AuthProvider', () => ({
     useAuth: vi.fn(),
 }));
 
-vi.mock('../components/ClientHeader', () => ({
+vi.mock('../components/DashboardItems/ClientHeader', () => ({
     default: () => <div data-testid="client-header">ClientHeader Mock</div>,
 }));
 
-vi.mock('../components/quadrants/PlansHeld', () => ({
+vi.mock('../components/DashboardItems/PlansHeld', () => ({
     default: () => <div data-testid="plans-held">PlansHeld Mock</div>,
 }));
 
-vi.mock('../components/quadrants/Insights', () => ({
+vi.mock('../components/DashboardItems/Insights', () => ({
     __esModule: true,
     default: () => <div data-testid="risk-profile">Insights Mock</div>,
 }));
 
-vi.mock('../components/quadrants/Cashflow', () => ({
+vi.mock('../components/DashboardItems/Cashflow', () => ({
     default: () => <div data-testid="cashflow">Cashflow Mock</div>,
 }));
 
-vi.mock('../components/quadrants/AssetAllocation', () => ({
+vi.mock('../components/DashboardItems/AssetAllocation', () => ({
     default: () => <div data-testid="asset-allocation">AssetAllocation Mock</div>,
 }));
 
@@ -79,6 +79,7 @@ describe('Dashboard Data Mapping Logic', () => {
                     policy_id: 'inv-1',
                     policy_name: 'Tech Fund',
                     policy_type: 'Equities',
+                    status: 'Active',
                     start_date: '2020-01-01',
                     expiry_date: '2030-01-01',
                     investment_valuations: [{ current_value: 10000, as_of_date: '2023-01-01' }]
@@ -89,6 +90,7 @@ describe('Dashboard Data Mapping Logic', () => {
                     policy_id: 'ins-1',
                     policy_name: 'Life Plan',
                     policy_type: 'Whole Life',
+                    status: 'Active',
                     start_date: '2021-01-01',
                     expiry_date: '2050-01-01',
                     sum_assured: 500000,

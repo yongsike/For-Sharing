@@ -136,8 +136,8 @@ const PlansHeld: React.FC<PlansHeldProps> = ({ client, mode = 'overview', dateRa
                                         <td>{formatDate(plan.start_date)}</td>
                                         <td>{formatDate(plan.end_date)}</td>
                                         <td>
-                                            <span className={`status-pill ${status.toLowerCase()}`}>
-                                                {status}
+                                            <span className={`status-pill ${(status || '').toLowerCase()}`}>
+                                                {status || '-'}
                                             </span>
                                         </td>
                                     </tr>
@@ -222,8 +222,8 @@ const PlanDetailView: React.FC<PlanDetailViewProps> = ({ plan }) => {
                 <h2 style={{ fontSize: '1.6rem', marginBottom: '0.25rem' }}>{plan.plan_name}</h2>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                     <div className="modal-id" style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Plan ID: {plan.plan_id}</div>
-                    <span className={`status-pill ${plan.status.toLowerCase()}`} style={{ fontSize: '0.75rem', padding: '2px 10px' }}>
-                        {plan.status}
+                    <span className={`status-pill ${(plan.status || '').toLowerCase()}`} style={{ fontSize: '0.75rem', padding: '2px 10px' }}>
+                        {plan.status || '-'}
                     </span>
                 </div>
             </div>
