@@ -19,6 +19,7 @@ const Navbar: React.FC = () => {
     const [results, setResults] = useState<SearchResult[]>([])
     const [isSearching, setIsSearching] = useState(false)
     const [showResults, setShowResults] = useState(false)
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const searchRef = useRef<HTMLDivElement>(null)
 
     // Close results when clicking outside
@@ -76,6 +77,7 @@ const Navbar: React.FC = () => {
         navigate(`/${clientId}`)
         setSearchQuery('')
         setShowResults(false)
+        setIsMobileMenuOpen(false)
     }
 
     const displayName = user?.fullName || user?.email?.split('@')[0] || 'User'
@@ -161,11 +163,18 @@ const Navbar: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="navbar-right">
+                <div className="hamburger" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                    <span className={`bar ${isMobileMenuOpen ? 'open' : ''}`}></span>
+                    <span className={`bar ${isMobileMenuOpen ? 'open' : ''}`}></span>
+                    <span className={`bar ${isMobileMenuOpen ? 'open' : ''}`}></span>
+                </div>
+
+                <div className={`navbar-right ${isMobileMenuOpen ? 'open' : ''}`}>
                     <div className="navbar-actions">
                         <Link 
                             to={dashboardLink} 
                             className={`action-btn ${isDashboardActive ? 'active' : ''}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
                         >
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="3" width="7" height="7"></rect>
@@ -179,6 +188,7 @@ const Navbar: React.FC = () => {
                         <Link 
                             to="/scenario" 
                             className={`action-btn ${location.pathname.startsWith('/scenario') ? 'active' : ''}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
                         >
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
@@ -190,6 +200,7 @@ const Navbar: React.FC = () => {
                         <Link 
                             to="/add-client"
                             className={`action-btn ${location.pathname === '/add-client' ? 'active' : ''}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
                         >
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -204,6 +215,7 @@ const Navbar: React.FC = () => {
                             <Link 
                                 to="/admin/manage-users" 
                                 className={`action-btn ${location.pathname === '/admin/manage-users' ? 'active' : ''}`}
+                                onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
