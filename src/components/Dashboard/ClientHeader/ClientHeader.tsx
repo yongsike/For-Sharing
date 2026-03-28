@@ -308,6 +308,7 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
         <>
             <header
                 className="dashboard-header glass animate-fade-in"
+                data-testid="client-header"
                 onClick={() => setIsModalOpen(true)}
                 style={{ cursor: 'pointer', transition: 'transform 0.2s ease', display: 'flex', alignItems: 'center', gap: '2rem' }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
