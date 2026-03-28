@@ -4,11 +4,24 @@
     align-items: center;
     padding: 0 2rem;
     height: 64px;
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 10001;
+    left: 0;
+    width: 100vw;
+    z-index: 10002;
     background: #fff;
     border-bottom: 1px solid var(--border);
+}
+
+.desktop-only {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.navbar-left {
+    position: relative;
+    z-index: 10002;
 }
 
 .navbar-left .logo {
@@ -67,6 +80,7 @@
 .action-btn.active {
     background: var(--primary);
     color: #fff;
+    height: 63px;
 }
 
 .action-btn.active::after {
@@ -94,6 +108,8 @@
     margin: 0 3rem;
     display: flex;
     justify-content: center;
+    position: relative;
+    z-index: 10002;
 }
 
 .search-container {
@@ -414,7 +430,15 @@
     transform: translateY(-8px) rotate(-45deg);
 }
 
+.navbar-mobile-menu {
+    display: none;
+}
+
 @media (max-width: 1500px) {
+    .desktop-only {
+        display: none;
+    }
+
     .hamburger {
         display: flex;
     }
@@ -432,7 +456,7 @@
         padding: 0.4rem 0.75rem;
     }
 
-    .navbar-right {
+    .navbar-mobile-menu {
         position: fixed;
         top: 64px;
         left: 0;
@@ -443,15 +467,16 @@
         padding: 0;
         border-bottom: 1px solid var(--border);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transform: translateY(-150%);
+        transform: translateY(-100%);
         transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-        z-index: 10000;
+        z-index: 10001;
         height: auto;
         opacity: 0;
         pointer-events: none;
+        display: flex;
     }
 
-    .navbar-right.open {
+    .navbar-mobile-menu.open {
         transform: translateY(0);
         opacity: 1;
         pointer-events: auto;
@@ -469,9 +494,13 @@
         width: 100%;
         border-right: none;
         border-bottom: 1px solid var(--border);
-        height: 56px;
+        height: 3.5rem;
         justify-content: flex-start;
         padding-left: 2rem;
+    }
+
+    .action-btn.active {
+        height: 3.5rem;
     }
 
     .action-btn.active::after {
@@ -494,29 +523,35 @@
         border-radius: 0;
         border: none;
         background: transparent;
-        height: auto;
+        height: 3.5rem;
+        overflow: hidden;
+        transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .profile-container:hover {
-        height: auto;
-        border-radius: 0;
-        border: none;
-        box-shadow: none;
-        background: transparent;
+        height: 195px;
+        background: rgba(0, 0, 0, 0.02);
     }
 
     .advisor-profile {
-        padding: 1rem 2rem;
+        padding: 0 2rem;
+        height: 3.5rem;
         border-bottom: 1px solid var(--border);
         justify-content: flex-start;
     }
 
     .profile-dropdown {
-        opacity: 1;
-        transform: none;
+        opacity: 0;
+        transform: translateY(-10px);
         position: relative;
-        padding: 1rem 2rem 2rem 2rem;
+        padding: 1.25rem 2rem;
         display: block;
+        transition: opacity 0.2s ease-out, transform 0.3s ease-out;
+    }
+
+    .profile-container:hover .profile-dropdown {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .dropdown-divider {

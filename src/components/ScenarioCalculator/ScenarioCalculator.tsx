@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { runScenario, runContributionScenario } from '../lib/scenarioCalculator';
-import type { ScenarioResult, ContributionResult } from '../lib/scenarioCalculator';
+import { runScenario, runContributionScenario } from '../../lib/scenarioCalculator';
+import type { ScenarioResult, ContributionResult } from '../../lib/scenarioCalculator';
 import './ScenarioCalculator.css';
-import { Button } from './UI/Button';
+import { Button } from '../UI/Button';
 
 type Frequency = 'monthly' | 'quarterly' | 'annually';
 type Mode = 'future_value' | 'contribution';
@@ -204,7 +204,7 @@ const ScenarioCalculator: React.FC = () => {
   const growthPct = activeResult ? pct(Math.max(0, activeResult.breakdown.totalGrowth), activeResult.finalPrincipal) : 0;
 
   return (
-    <div className="scenario-page animate-fade">
+    <div className="scenario-page animate-fade-in">
 
       {/* ── Page Header ─────────────────────── */}
       <div className="scenario-hero glass-card no-hover">
@@ -222,20 +222,12 @@ const ScenarioCalculator: React.FC = () => {
         </div>
       </div>
 
-      <div className="scenario-body">
+      <div className="scenario-grid">
 
         {/* ── Left: Parameters form ────────── */}
-        <section className="glass-card scenario-form-card no-hover">
+        <section className="glass-card scenario-form-card no-hover animate-fade-in stagger-1">
           
-          <div className="tabs-switcher" style={{
-            display: 'flex',
-            marginBottom: '1.5rem',
-            width: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-            borderRadius: '12px',
-            padding: '4px',
-            gap: 0
-          }}>
+          <div className="tabs-switcher" style={{ marginBottom: '1.25rem' }}>
             <Button
               variant="tab"
               isActive={mode === 'future_value'}
@@ -463,7 +455,7 @@ const ScenarioCalculator: React.FC = () => {
             <div className="sc-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
               <Button 
                 type="submit" 
-                variant="primary" 
+                variant="outline" 
                 disabled={loading}
                 fullWidth={!activeResult}
                 style={{ flex: activeResult ? 2 : 1 }}
@@ -488,7 +480,7 @@ const ScenarioCalculator: React.FC = () => {
         </section>
 
         {/* ── Right: Results ───────────────── */}
-        <div className="scenario-results-col">
+        <div className="scenario-results-col animate-fade-in stagger-2">
           {!activeResult && !loading && (
             <div className="scenario-empty-state glass-card no-hover">
               <div className="scenario-empty-icon">

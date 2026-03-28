@@ -174,7 +174,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
         <>
             <div className="risk-indicator" style={{ flex: 1, gap: '1rem', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 {clientInfo && (
-                    <div className="risk-header-info animate-fade">
+                    <div className="risk-header-info">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                             <div
                                 className="risk-category-display"
@@ -236,7 +236,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                     <div className="ai-analysis-scroll-area">
                         {error && <p className="error-text">{error}</p>}
                         {mode === 'focused' && (
-                            <div className="structured-analysis animate-fade">
+                            <div className="structured-analysis">
                                 {summary && (
                                     <div className="analysis-section">
                                         <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem' }}>Summary</h4>
@@ -311,7 +311,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                                     </div>
                                 )}
                                 {summary && (
-                                    <div className="analysis-text animate-fade" style={{ opacity: 0.9 }}>
+                                    <div className="analysis-text" style={{ opacity: 0.9 }}>
                                         <h4 style={{ color: 'var(--primary)', fontSize: 'var(--text-xs)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8, fontWeight: 'var(--font-semibold)' }}>Summary</h4>
                                         {renderCleanList(summary)}
                                     </div>
@@ -320,7 +320,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                         )}
 
                         {!hasInitiated && !loading && !error && (
-                            <div className="animate-fade" style={{
+                            <div style={{
                                 height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                 padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-base)', opacity: 0.8, gap: '0.5rem'
                             }}>
@@ -345,10 +345,10 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
 
                 {/* Outdated Analysis Warning Indicator */}
                 {cache?.generatedPeriod && dateRange && (cache.generatedPeriod.startDate !== dateRange.startDate || cache.generatedPeriod.endDate !== dateRange.endDate) && (
-                    <div className="animate-fade" style={{
+                    <div style={{
                         padding: '8px 12px',
-                        background: 'rgba(155, 34, 38, 0.08)',
-                        border: '1px solid rgba(155, 34, 38, 0.15)',
+                        background: 'rgba(155, 34, 38, 0.05)',
+                        border: '1.2px dashed rgba(155, 34, 38, 0.35)',
                         borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',

@@ -17,8 +17,7 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     flex-wrap: wrap;
-    gap: 2rem;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .dashboard-header:hover {
@@ -178,7 +177,7 @@
     display: flex;
     flex-direction: column;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     /* Prevent child overflow from breaking the card */
 }

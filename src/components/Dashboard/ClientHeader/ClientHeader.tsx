@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import '../Dashboard.css';
-import { FocusModal } from '../UI/FocusModal';
-import PdfImport from './PdfImport';
+import { FocusModal } from '../../UI/FocusModal';
+import { UpdateClientModal } from './UpdateClientModal';
 import ExportReportModal from './ExportReportModal';
-import { Button } from '../UI/Button';
+import { Button } from '../../UI/Button';
 
 interface ClientDetailModalProps {
     client: any;
@@ -115,17 +115,13 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
 
     if (mode === 'update') {
         return (
-            <FocusModal isOpen={true} onClose={onClose} modalContentStyle={{ gap: 0 }}>
-                <PdfImport
-                    clientId={client.client_id}
-                    variant="inline"
-                    onClose={onClose}
-                    onCancel={() => setMode('view')}
-                    onSuccess={() => {
-                        window.location.reload();
-                    }}
-                />
-            </FocusModal>
+            <UpdateClientModal
+                clientId={client.client_id}
+                onClose={onClose}
+                onSuccess={() => {
+                    window.location.reload();
+                }}
+            />
         );
     }
 
@@ -156,15 +152,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
                 </div>
 
                 {/* Tabs Switcher - Segmented Control Style */}
-                <div className="tabs-switcher" style={{
-                    display: 'flex',
-                    marginBottom: '0.5rem',
-                    width: '100%',
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    borderRadius: '12px',
-                    padding: '4px',
-                    gap: 0
-                }}>
+                <div className="tabs-switcher">
                     <Button
                         variant="tab"
                         isActive={activeTab === 'personal'}
@@ -196,7 +184,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, onClose }
                                 size="medium"
                                 onClick={() => setMode('update')}
                             >
-                                Update Profile
+                                Update Client Profile
                             </Button>
                         </div>
                     </>
@@ -319,7 +307,7 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
     return (
         <>
             <header
-                className="dashboard-header glass"
+                className="dashboard-header glass animate-fade-in"
                 onClick={() => setIsModalOpen(true)}
                 style={{ cursor: 'pointer', transition: 'transform 0.2s ease', display: 'flex', alignItems: 'center', gap: '2rem' }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -360,7 +348,7 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
                     </div>
                     <div className="client-details">
                         <h1 style={{ fontSize: 'var(--text-2xl)', margin: 0 }}>{client.full_name}</h1>
-                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
                                 <Button
                                     variant="outline"
                                     size="medium"
@@ -373,7 +361,7 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                     </svg>
-                                    Update Profile
+                                    Update Client
                                 </Button>
                             <Button
                                 variant="outline"
@@ -536,17 +524,13 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
             )}
 
             {isUpdateModalOpen && (
-                <FocusModal isOpen={true} onClose={() => setIsUpdateModalOpen(false)} modalContentStyle={{ gap: 0 }}>
-                    <PdfImport
-                        clientId={client.client_id}
-                        variant="inline"
-                        onClose={() => setIsUpdateModalOpen(false)}
-                        onCancel={() => setIsUpdateModalOpen(false)}
-                        onSuccess={() => {
-                            window.location.reload();
-                        }}
-                    />
-                </FocusModal>
+                <UpdateClientModal
+                    clientId={client.client_id}
+                    onClose={() => setIsUpdateModalOpen(false)}
+                    onSuccess={() => {
+                        window.location.reload();
+                    }}
+                />
             )}
         </>
     );

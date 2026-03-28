@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { FocusModal } from '../UI/FocusModal';
+import { FocusModal } from '../../UI/FocusModal';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import AssetAllocation from './AssetAllocation';
-import Cashflow from './Cashflow';
-import { renderCleanList } from './Insights/Insights.components';
-import { Button } from '../UI/Button';
-import calibreLogo from '../../assets/calibre logo.png';
+import AssetAllocation from '../AssetAllocation';
+import Cashflow from '../Cashflow';
+import { renderCleanList } from '../Insights/Insights.components';
+import { Button } from '../../UI/Button';
+import calibreLogo from '../../../assets/calibre logo.png';
 
 interface ExportReportModalProps {
     client: any;
@@ -111,8 +111,6 @@ const ExportReportModal: React.FC<ExportReportModalProps> = ({
     client,
     startDate: initialStartDate,
     endDate: initialEndDate,
-    dashboardStartDate,
-    dashboardEndDate,
     cache,
     onClose,
     onFocusQuadrant
@@ -380,9 +378,11 @@ const ExportReportModal: React.FC<ExportReportModalProps> = ({
                                     <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Include Risk Analysis</span>
                                 </label>
                                 {includeRiskAnalysis && !isRiskAnalysisValid && (
-                                    <div style={{ marginLeft: '26px', padding: '10px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--danger)', fontWeight: 500 }}>
-                                            {cache?.focused ? 'Analysis period does not match selection.' : 'No AI risk analysis found.'}
+                                    <div style={{ marginLeft: '26px', padding: '10px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', border: '1.2px dashed rgba(239, 68, 68, 0.35)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--danger)', fontWeight: 500, lineHeight: '1.4' }}>
+                                            {cache?.focused
+                                                ? `This analysis was generated for a different period (${fmtDate(cache.generatedPeriod?.startDate)} - ${fmtDate(cache.generatedPeriod?.endDate)})`
+                                                : 'No AI risk analysis found.'}
                                         </p>
                                         <Button
                                             variant="outline"
@@ -408,7 +408,7 @@ const ExportReportModal: React.FC<ExportReportModalProps> = ({
                                     <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Include Meeting Notes</span>
                                 </label>
                                 {includeMeetingNotes && !isMeetingNotesValid && (
-                                    <div style={{ marginLeft: '26px', padding: '10px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ marginLeft: '26px', padding: '10px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', border: '1.2px dashed rgba(239, 68, 68, 0.35)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--danger)', fontWeight: 500 }}>
                                             No meeting notes or transcript found.
                                         </p>
@@ -425,11 +425,11 @@ const ExportReportModal: React.FC<ExportReportModalProps> = ({
                             </div>
                         </div>
 
-                        <Button 
-                            variant="outline" 
-                            size="large" 
-                            fullWidth 
-                            onClick={handleExport} 
+                        <Button
+                            variant="outline"
+                            size="large"
+                            fullWidth
+                            onClick={handleExport}
                             disabled={!filename.trim() || !startDate || !endDate || (includeRiskAnalysis && !isRiskAnalysisValid) || (includeMeetingNotes && !isMeetingNotesValid)}
                         >
                             Generate Report

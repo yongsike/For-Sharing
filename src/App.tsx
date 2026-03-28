@@ -1,19 +1,16 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Dashboard from './components/Dashboard'
+import Dashboard from './components/Dashboard/Dashboard'
 import Login from './components/Login'
-import ManageUsers from './components/ManageUsers'
-import AddUser from './components/AddUser'
-import EditUsers from './components/EditUsers'
-import DeleteUsers from './components/DeleteUsers'
-import ScenarioCalculator from './components/ScenarioCalculator'
+import AdminPortal from './components/AdminPortal/AdminPortal'
+import ScenarioCalculator from './components/ScenarioCalculator/ScenarioCalculator'
 import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
 import './App.css'
 import { AuthProvider } from './lib/AuthProvider'
 import RequireAuth from './lib/RequireAuth'
 import IdleLogout from './components/IdleLogout'
-import { PdfImport } from './components/DashboardItems/PdfImport'
+import AddClientPage from './components/AddClient/AddClientPage'
 
 function AppContent() {
   const location = useLocation()
@@ -30,7 +27,7 @@ function AppContent() {
             path="/admin/manage-users"
             element={
               <RequireAuth>
-                <ManageUsers />
+                <AdminPortal />
               </RequireAuth>
             }
           />
@@ -38,23 +35,23 @@ function AppContent() {
             path="/admin/add-user"
             element={
               <RequireAuth>
-                <AddUser />
+                <AdminPortal defaultTab="add" />
               </RequireAuth>
             }
           />
           <Route
-            path="/admin/edit-users"
+            path="/admin/manage-clients"
             element={
               <RequireAuth>
-                <EditUsers />
+                <AdminPortal defaultTab="edit" />
               </RequireAuth>
             }
           />
           <Route
-            path="/admin/delete-users"
+            path="/admin/remove-user"
             element={
               <RequireAuth>
-                <DeleteUsers />
+                <AdminPortal defaultTab="delete" />
               </RequireAuth>
             }
           />
@@ -80,7 +77,9 @@ function AppContent() {
             path="/add-client"
             element={
               <RequireAuth>
-                <PdfImport variant="page" />
+                <AddClientPage onSuccess={(newId) => {
+                  if (newId) window.location.href = `/${newId}`;
+                }} onCancel={() => window.history.back()} />
               </RequireAuth>
             }
           />

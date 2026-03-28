@@ -3,76 +3,17 @@
    All colours from CSS custom properties (design tokens)
 ======================================================== */
 
-.scenario-page {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-/* ── Hero header ─────────────────────────────────────── */
-.scenario-hero {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 1.5rem 2rem;
-  background: #fff;
-  transition: all 0.3s ease;
-  cursor: default;
-}
-
-.scenario-hero-icon {
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.scenario-title {
-  font-size: var(--text-2xl);
-  font-family: var(--font-heading);
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0 0 0.25rem;
-}
-
-.scenario-subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.5;
-  opacity: 0.9;
-}
-
-/* ── Two-column body ─────────────────────────────────── */
-.scenario-body {
+.scenario-grid {
   display: grid;
   grid-template-columns: 380px 1fr;
-  gap: 1.75rem;
+  gap: 2rem;
   align-items: start;
 }
 
 @media (max-width: 860px) {
-  .scenario-body {
+  .scenario-grid {
     grid-template-columns: 1fr;
   }
-}
-
-/* ── Form card ───────────────────────────────────────── */
-.scenario-form-card {
-  padding: 1.75rem;
-}
-
-.scenario-section-heading {
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0 0 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
 }
 
 /* Tabs */
@@ -80,7 +21,7 @@
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
-  background: rgba(0,0,0,0.03);
+  background: rgba(0, 0, 0, 0.03);
   padding: 0.35rem;
   border-radius: 10px;
 }
@@ -100,13 +41,13 @@
 
 .sc-tab:hover {
   color: var(--text-main);
-  background: rgba(0,0,0,0.02);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .sc-tab.active {
   background: #fff;
   color: var(--primary);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* Field */
@@ -336,7 +277,9 @@
 }
 
 @keyframes sc-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Slide-in reveal for conditional fields / results */
@@ -345,8 +288,15 @@
 }
 
 @keyframes sc-slide-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Right column ──────────────────────────────────── */
@@ -432,7 +382,7 @@
 .sc-bar-track {
   height: 8px;
   border-radius: 99px;
-  background: rgba(0,0,0,0.06);
+  background: rgba(0, 0, 0, 0.06);
   overflow: hidden;
   display: flex;
 }
@@ -442,8 +392,13 @@
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sc-bar-capital { background: var(--secondary, #334155); }
-.sc-bar-growth  { background: var(--primary); }
+.sc-bar-capital {
+  background: var(--secondary, #334155);
+}
+
+.sc-bar-growth {
+  background: var(--primary);
+}
 
 .sc-bar-legend {
   display: flex;
@@ -467,8 +422,13 @@
   flex-shrink: 0;
 }
 
-.sc-dot-capital { background: var(--secondary, #334155); }
-.sc-dot-growth  { background: var(--primary); }
+.sc-dot-capital {
+  background: var(--secondary, #334155);
+}
+
+.sc-dot-growth {
+  background: var(--primary);
+}
 
 /* ── Breakdown grid ──────────────────────────────── */
 .sc-breakdown-grid {
@@ -487,8 +447,13 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.sc-stat-positive { border: 2px solid var(--success, #10b981) !important; }
-.sc-stat-negative { border: 2px solid var(--danger, #ef4444) !important; }
+.sc-stat-positive {
+  border: 2px solid var(--success, #10b981) !important;
+}
+
+.sc-stat-negative {
+  border: 2px solid var(--danger, #ef4444) !important;
+}
 
 .sc-stat-icon {
   color: var(--primary);
@@ -520,8 +485,13 @@
   color: var(--text-main);
 }
 
-.sc-text-success { color: var(--success, #10b981); }
-.sc-text-danger  { color: var(--danger, #ef4444); }
+.sc-text-success {
+  color: var(--success, #10b981);
+}
+
+.sc-text-danger {
+  color: var(--danger, #ef4444);
+}
 
 /* Disclaimer */
 .sc-disclaimer {

@@ -77,12 +77,17 @@
   padding: 0;
 }
 
-html,
+html {
+  overflow-y: scroll;
+}
+
 body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -134,10 +139,10 @@ h6 {
 
 
 /* Animations */
-@keyframes fadeIn {
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
 
   to {
@@ -145,6 +150,21 @@ h6 {
     transform: translateY(0);
   }
 }
+
+.animate-fade-in {
+  animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+
 
 /* Standardized Buttons */
 .btn-base {
@@ -181,7 +201,7 @@ h6 {
 .btn-outline {
   background: transparent;
   color: var(--primary);
-  border-color: var(--primary);
+  border: 2px solid var(--primary);
 }
 
 .btn-outline:hover:not(:disabled) {
@@ -236,7 +256,10 @@ button:disabled {
 }
 
 .animate-fade {
-  animation: fadeIn 0.6s ease-out forwards;
+  animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* Minimalist Scrollbar */
@@ -256,4 +279,77 @@ button:disabled {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
+}
+
+/* ── Tool Page Layout (Shared across Scenario, Admin, Add Client) ── */
+.scenario-page {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.scenario-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: #fff;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.scenario-hero-icon {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.scenario-title {
+  font-size: var(--text-2xl);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 0.25rem;
+}
+
+.scenario-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.scenario-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.scenario-form-card {
+  padding: 1.75rem;
+}
+
+.scenario-section-heading {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Tabs switcher for manage users and tool pages */
+.tabs-switcher {
+  display: flex;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 0;
 }

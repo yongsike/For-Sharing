@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import { CustomizedXAxisTick } from '../UI/ChartUtils';
 import { FocusModal } from '../UI/FocusModal';
 
@@ -130,6 +130,7 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
                         <Line type="monotone" dataKey="wealthTransfers" stroke="#3C5A82" strokeWidth={1.5} dot={false} isAnimationActive={false} />
                         <Line type="monotone" dataKey="netSurplus" stroke="#BC6C25" strokeWidth={1.5} dot={false} isAnimationActive={false} />
                         <Line type="monotone" dataKey="netCashflow" stroke="#C5B358" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                        <ReferenceLine y={0} stroke="#555555" strokeWidth={2} strokeDasharray="6 4" />
                     </LineChart>
                 </ResponsiveContainer>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', marginTop: '0.5rem' }}>
@@ -173,14 +174,15 @@ const Cashflow: React.FC<CashflowProps> = ({ client, mode = 'overview', dateRang
 
                                         return (
                                             <>
-                                                {visibleLines.inflow && <Line type="monotone" dataKey="inflow" stroke="#719266" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={true} animationDuration={800} />}
-                                                {visibleLines.expense && <Line type="monotone" dataKey="expense" stroke="#9B2226" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={true} animationDuration={800} />}
-                                                {visibleLines.wealthTransfers && <Line type="monotone" dataKey="wealthTransfers" stroke="#3C5A82" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={true} animationDuration={800} />}
-                                                {visibleLines.netSurplus && <Line type="monotone" dataKey="netSurplus" stroke="#BC6C25" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={true} animationDuration={800} />}
-                                                {visibleLines.netCashflow && <Line type="monotone" dataKey="netCashflow" stroke="#C5B358" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={true} animationDuration={800} />}
+                                                {visibleLines.inflow && <Line type="monotone" dataKey="inflow" stroke="#719266" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={!isExporting} animationDuration={800} />}
+                                                {visibleLines.expense && <Line type="monotone" dataKey="expense" stroke="#9B2226" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={!isExporting} animationDuration={800} />}
+                                                {visibleLines.wealthTransfers && <Line type="monotone" dataKey="wealthTransfers" stroke="#3C5A82" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={!isExporting} animationDuration={800} />}
+                                                {visibleLines.netSurplus && <Line type="monotone" dataKey="netSurplus" stroke="#BC6C25" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={!isExporting} animationDuration={800} />}
+                                                {visibleLines.netCashflow && <Line type="monotone" dataKey="netCashflow" stroke="#C5B358" strokeWidth={1.5} dot={dotStyle} activeDot={activeDotStyle} isAnimationActive={!isExporting} animationDuration={800} />}
                                             </>
                                         );
                                     })()}
+                                    <ReferenceLine y={0} stroke="#555555" strokeWidth={2} strokeDasharray="6 4" />
                                 </LineChart>
                             </ResponsiveContainer>
 

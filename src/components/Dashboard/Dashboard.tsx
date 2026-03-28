@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link, useParams } from 'react-router-dom';
-import ClientHeader from './DashboardItems/ClientHeader';
-import PlansHeld from './DashboardItems/PlansHeld';
-import Insights from './DashboardItems/Insights';
-import Cashflow from './DashboardItems/Cashflow';
-import AssetAllocation from './DashboardItems/AssetAllocation';
-import { PdfImport } from './DashboardItems/PdfImport';
-import { useDashboardData } from '../hooks/useDashboardData';
+import ClientHeader from './ClientHeader/ClientHeader';
+import PlansHeld from './PlansHeld';
+import Insights from './Insights';
+import Cashflow from './Cashflow';
+import AssetAllocation from './AssetAllocation';
+import { UpdateClientModal } from './ClientHeader/UpdateClientModal';
+import { useDashboardData } from '../../hooks/useDashboardData';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
@@ -97,18 +97,18 @@ const Dashboard: React.FC = () => {
 
     const renderFullGrid = () => (
         <main className="dashboard-grid">
-            <Link to={`/${clientId}/cashflow`} className="quadrant-link">
+            <Link to={`/${clientId}/cashflow`} className="quadrant-link animate-fade-in stagger-1">
                 <Cashflow client={client} dateRange={dateRange} />
             </Link>
-            <Link to={`/${clientId}/plans`} className="quadrant-link">
+            <Link to={`/${clientId}/plans`} className="quadrant-link animate-fade-in stagger-2">
                 <PlansHeld client={client} mode="overview" dateRange={dateRange} />
             </Link>
-            <Link to={`/${clientId}/asset-allocation`} className="quadrant-link">
+            <Link to={`/${clientId}/asset-allocation`} className="quadrant-link animate-fade-in stagger-3">
                 <AssetAllocation client={client} dateRange={dateRange} />
             </Link>
             <div
                 onClick={() => navigate(`/${clientId}/risk`)}
-                className="quadrant-link"
+                className="quadrant-link animate-fade-in stagger-4"
                 style={{ cursor: 'pointer', textDecoration: 'none' }}
             >
                 <Insights
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="dashboard-container animate-fade">
+        <div className="dashboard-container">
             <ClientHeader
                 client={client}
                 showBack={isFocused}
@@ -170,7 +170,7 @@ const Dashboard: React.FC = () => {
                 }}
             />
             {isFocused ? (
-                <main className="focused-view">
+                <main className="focused-view animate-fade-in">
                     {renderFocusedQuadrant()}
                 </main>
             ) : (
@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
                 </div>
             )}
             {showPdfImport && clientId && (
-                <PdfImport
+                <UpdateClientModal
                     clientId={clientId}
                     onClose={() => setShowPdfImport(false)}
                     onSuccess={() => {

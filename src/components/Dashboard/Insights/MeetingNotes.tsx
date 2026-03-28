@@ -136,11 +136,8 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
 
     return (
         <>
-            <div className="risk-indicator" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: '0.75rem' }}>
-                <div className="tabs-switcher animate-fade" style={{
-                    display: 'flex', width: '100%', backgroundColor: 'rgba(0, 0, 0, 0.04)', borderRadius: '10px', 
-                    padding: '3px', gap: 0
-                }}>
+            <div className="risk-indicator" style={{ flex: 1, gap: '1rem', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                <div className="tabs-switcher" style={{ marginBottom: 0 }}>
                     <Button
                         variant="tab"
                         isActive={meetingTab === 'transcript'}
@@ -166,7 +163,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                     onMouseLeave={() => setMeetingOutputHovered(false)}
                 >
                     {meetingTab === 'transcript' && (
-                        <div className="meeting-input-container animate-fade" style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="meeting-input-container" style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
                             <textarea
                                 placeholder="Paste or type your meeting transcript here..."
                                 value={transcript}
@@ -207,7 +204,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                             <div className="ai-analysis-scroll-area">
                                 {error && <p className="error-text">{error}</p>}
                                 {!meetingNotesSummary && !loading && !meetingNotesResult && (
-                                    <div className="animate-fade" style={{
+                                    <div style={{
                                         height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                         padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-base)', opacity: 0.8, gap: '1rem'
                                     }}>
@@ -223,7 +220,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                                 )}
 
                                 {mode === 'focused' && (meetingNotesSummary || loading || meetingNotesResult) && (
-                                    <div className="structured-analysis animate-fade">
+                                    <div className="structured-analysis">
                                         {meetingNotesSummary && (
                                             <div className="analysis-section">
                                                 <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem' }}>Summary</h4>
@@ -270,7 +267,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                                 )}
 
                                 {mode === 'overview' && (meetingNotesSummary || loading) && (
-                                    <div className="animate-fade">
+                                    <div>
                                         {loading && (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem 0' }}>
                                                 <div className="loading-shimmer">
@@ -284,7 +281,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                                             </div>
                                         )}
                                         {meetingNotesSummary && !loading && (
-                                            <div className="analysis-text animate-fade" style={{ opacity: 0.9 }}>
+                                            <div className="analysis-text" style={{ opacity: 0.9 }}>
                                                 <h4 style={{ color: 'var(--primary)', fontSize: 'var(--text-xs)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8, fontWeight: 'var(--font-semibold)' }}>Summary</h4>
                                                 {renderCleanList(meetingNotesSummary)}
                                             </div>

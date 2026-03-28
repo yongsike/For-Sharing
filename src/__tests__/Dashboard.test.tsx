@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import Dashboard from '../components/Dashboard';
+import Dashboard from '../components/Dashboard/Dashboard';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthProvider';
 
@@ -17,24 +17,24 @@ vi.mock('../lib/AuthProvider', () => ({
     useAuth: vi.fn(),
 }));
 
-vi.mock('../components/DashboardItems/ClientHeader', () => ({
+vi.mock('../components/Dashboard/ClientHeader', () => ({
     default: () => <div data-testid="client-header">ClientHeader Mock</div>,
 }));
 
-vi.mock('../components/DashboardItems/PlansHeld', () => ({
+vi.mock('../components/Dashboard/PlansHeld', () => ({
     default: () => <div data-testid="plans-held">PlansHeld Mock</div>,
 }));
 
-vi.mock('../components/DashboardItems/Insights', () => ({
+vi.mock('../components/Dashboard/Insights', () => ({
     __esModule: true,
     default: () => <div data-testid="risk-profile">Insights Mock</div>,
 }));
 
-vi.mock('../components/DashboardItems/Cashflow', () => ({
+vi.mock('../components/Dashboard/Cashflow', () => ({
     default: () => <div data-testid="cashflow">Cashflow Mock</div>,
 }));
 
-vi.mock('../components/DashboardItems/AssetAllocation', () => ({
+vi.mock('../components/Dashboard/AssetAllocation', () => ({
     default: () => <div data-testid="asset-allocation">AssetAllocation Mock</div>,
 }));
 
