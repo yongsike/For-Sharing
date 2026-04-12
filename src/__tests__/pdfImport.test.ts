@@ -84,6 +84,38 @@ describe('normalizeExtractedData', () => {
         expect(normalized.client?.marital_status).toBeNull();
         expect(normalized.client?.gender).toBeNull();
     });
+
+    it('coerces languages_spoken / languages_written from OCR strings to string[]', () => {
+        const data = {
+            client: {
+                name_as_per_id: 'John',
+                languages_spoken: 'English, Mandarin',
+                languages_written: 'English',
+            },
+        } as any;
+
+        const normalized = normalizeExtractedData(data);
+
+        expect(normalized.client?.languages_spoken).toEqual(['English', 'Mandarin']);
+        expect(normalized.client?.languages_written).toEqual(['English']);
+    });
+
+    it('replaces null / invalid family rows so UI can render without throwing', () => {
+        const data = {
+            client: { name_as_per_id: 'John' },
+            family: [null, { family_member_name: 'Jane', relationship: 'Spouse', gender: 'Female' }, 'oops'],
+            cashflow: null,
+        } as any;
+
+        const normalized = normalizeExtractedData(data);
+
+        expect(normalized.family?.length).toBe(3);
+        expect(normalized.family?.[0].family_member_name).toBe('');
+        expect(normalized.family?.[1].family_member_name).toBe('Jane');
+        expect(normalized.family?.[2].family_member_name).toBe('');
+        expect(normalized.cashflow).not.toBeNull();
+        expect(normalized.cashflow?.employment_income_gross).toBe(0);
+    });
 });
 
 describe('handleDatabaseError', () => {

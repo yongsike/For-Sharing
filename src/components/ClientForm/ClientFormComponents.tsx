@@ -54,6 +54,21 @@ export const formatValue = (val: any): string => {
   return String(val);
 };
 
+/** MultiPillSelect calls .map on values; OCR may send a comma-separated string instead of string[]. */
+export function normalizePillValues(val: any): string[] {
+  if (Array.isArray(val)) {
+    return val.map(v => (v == null ? '' : String(v).trim())).filter(Boolean);
+  }
+  if (val == null || val === '') return [];
+  if (typeof val === 'string') {
+    return val
+      .split(/[,;]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 export const Section: React.FC<{
   title: string;
   enabled?: boolean;
@@ -129,7 +144,7 @@ export const EditableFieldRow: React.FC<{
           isArray ? (
             <MultiPillSelect
               options={options}
-              values={val || []}
+              values={normalizePillValues(val)}
               onChange={onChange}
               disabled={disabled || !included}
               error={error}
@@ -188,6 +203,7 @@ export const MultiPillSelect: React.FC<{
   disabled?: boolean;
   error?: boolean;
 }> = ({ options, values, onChange, disabled, error }) => {
+  const pillValues = normalizePillValues(values);
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -221,10 +237,10 @@ export const MultiPillSelect: React.FC<{
 
   const addVal = (v: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (values.includes(v)) {
-      onChange(values.filter(x => x !== v));
+    if (pillValues.includes(v)) {
+      onChange(pillValues.filter(x => x !== v));
     } else {
-      onChange([...values, v]);
+      onChange([...pillValues, v]);
     }
   };
 
@@ -235,9 +251,9 @@ export const MultiPillSelect: React.FC<{
         onClick={toggleOpen}
         className={`custom-select-trigger ${isOpen ? 'open' : ''} ${error ? 'select-error' : ''} ${disabled ? 'disabled' : ''}`}
       >
-        {values.length === 0 && <span style={{ color: 'var(--text-muted, #888)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center' }}>Select</span>}
+        {pillValues.length === 0 && <span style={{ color: 'var(--text-muted, #888)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center' }}>Select</span>}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1 }}>
-          {values.map(v => (
+          {pillValues.map(v => (
             <div key={v} style={{
               background: 'var(--primary, #c5b358)', color: '#fff',
               borderRadius: '4px', padding: '1px 8px', fontSize: '0.75rem',
@@ -245,7 +261,7 @@ export const MultiPillSelect: React.FC<{
               fontWeight: 600
             }}>
               {v}
-              {!disabled && <span onClick={(e) => { e.stopPropagation(); onChange(values.filter(x => x !== v)); }} style={{ cursor: 'pointer', fontWeight: 800, marginLeft: '2px' }}>×</span>}
+              {!disabled && <span onClick={(e) => { e.stopPropagation(); onChange(pillValues.filter(x => x !== v)); }} style={{ cursor: 'pointer', fontWeight: 800, marginLeft: '2px' }}>×</span>}
             </div>
           ))}
         </div>
@@ -268,11 +284,11 @@ export const MultiPillSelect: React.FC<{
           {options.map(o => (
             <div
               key={o}
-              className={`custom-select-option ${values.includes(o) ? 'selected' : ''}`}
+              className={`custom-select-option ${pillValues.includes(o) ? 'selected' : ''}`}
               onClick={(e) => addVal(o, e)}
             >
               {o}
-              {values.includes(o) && <span>✓</span>}
+              {pillValues.includes(o) && <span>✓</span>}
             </div>
           ))}
         </div>

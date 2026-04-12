@@ -2,6 +2,7 @@ import { Router } from 'express'
 import multer from 'multer'
 import { requireSupabaseAuth } from '../middleware/requireSupabaseAuth.js'
 import { extractPdfData } from '../services/geminiOcr.js'
+import { sendGeminiError } from '../utils/geminiHttpError.js'
 
 export const ocrRouter = Router()
 
@@ -31,15 +32,17 @@ ocrRouter.post('/', requireSupabaseAuth, upload.single('pdf'), async (req, res) 
 
     res.json({ success: true, data: extracted })
   } catch (err) {
-    console.error('OCR Error:', err)
-
     if (err.message?.includes('Only PDF')) {
-      return res.status(400).json({ error: err.message })
+      return res.status(400).json({ error: err.message, code: 'BAD_REQUEST' })
     }
-
-    res.status(500).json({
-      error: err instanceof Error ? err.message : 'OCR processing failed',
-    })
+    if (err.message?.includes('Gemini API key not configured')) {
+      console.error('OCR Error:', err)
+      return res.status(503).json({
+        error: 'AI service is not configured on the server.',
+        code: 'AI_NOT_CONFIGURED',
+      })
+    }
+    return sendGeminiError(res, err, '[ocr]')
   }
 })
 

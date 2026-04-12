@@ -7,6 +7,8 @@ export const useAIAnalysis = (
 ) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    /** Server error code when present (e.g. AI_OVERLOADED) — for user-facing modal + support. */
+    const [errorCode, setErrorCode] = useState<string | null>(null);
     const [summary, setSummary] = useState<string>('');
     const [result, setResult] = useState<any>(null);
     const [copied, setCopied] = useState<boolean>(false);
@@ -58,10 +60,16 @@ export const useAIAnalysis = (
         setFeedbackError(null);
     }, []);
 
+    const clearAiError = useCallback(() => {
+        setError(null);
+        setErrorCode(null);
+    }, []);
+
     const reset = useCallback(() => {
         setSummary('');
         setResult(null);
         setError(null);
+        setErrorCode(null);
         setLoading(false);
         resetFeedback();
     }, [resetFeedback]);
@@ -69,6 +77,8 @@ export const useAIAnalysis = (
     return {
         loading, setLoading,
         error, setError,
+        errorCode, setErrorCode,
+        clearAiError,
         summary, setSummary,
         result, setResult,
         copied, setCopied,

@@ -11,6 +11,7 @@ import {
   InvestmentForm
 } from '../../ClientForm/ClientFormSections';
 import { MANDATORY_CLIENT_FIELDS } from '../../ClientForm/ClientFormComponents';
+import { AiErrorModal } from '../Insights/AiErrorModal';
 
 interface UpdateClientModalProps {
   clientId: string;
@@ -21,6 +22,7 @@ interface UpdateClientModalProps {
 export const UpdateClientModal: React.FC<UpdateClientModalProps> = ({ clientId, onSuccess, onClose }) => {
   const {
     fileInputRef, dragOver, file, step, setStep, error,
+    errorCode, clearAiError,
     extracted, existingClient, isNewClient,
     includeFamily, setIncludeFamily,
     includeCashflow, setIncludeCashflow,
@@ -118,16 +120,6 @@ export const UpdateClientModal: React.FC<UpdateClientModalProps> = ({ clientId, 
                 </div>
               )}
 
-              {error && (
-                <div className="standard-error-box" style={{ margin: '0 auto 1.5rem', justifyContent: 'center', width: 'fit-content' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                  <span>{error}</span>
-                </div>
-              )}
             </div>
           )}
 
@@ -242,16 +234,6 @@ export const UpdateClientModal: React.FC<UpdateClientModalProps> = ({ clientId, 
                 />
               )}
 
-              {error && (
-                <div className="error-text">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                  <span>{error}</span>
-                </div>
-              )}
             </div>
           )}
 
@@ -309,8 +291,11 @@ export const UpdateClientModal: React.FC<UpdateClientModalProps> = ({ clientId, 
   );
 
   return (
-    <FocusModal isOpen={true} onClose={onClose}>
-      {modalContent}
-    </FocusModal>
+    <>
+      <FocusModal isOpen={true} onClose={onClose}>
+        {modalContent}
+      </FocusModal>
+      <AiErrorModal open={!!error} onClose={clearAiError} message={error} code={errorCode} />
+    </>
   );
 };

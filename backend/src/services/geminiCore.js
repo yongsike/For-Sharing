@@ -53,10 +53,6 @@ export async function generateGeminiJson({
       return { _raw: text }
     }
   } catch (err) {
-    if (err.message?.includes('429') || err.message?.includes('quota')) {
-      console.error(`[${serviceName}] RATE LIMIT EXCEEDED (429).`);
-      throw new Error('AI Service is temporarily busy (Rate Limit). Please try again in 1-2 minutes.');
-    }
     console.error(`[${serviceName}] Model call failed:`, err);
     throw err;
   }

@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { generateRiskAnalysis, generateRiskSummary } from '../../../lib/insightsAI';
 import { useAIAnalysis } from './useAIAnalysis';
 import type { InsightsProps } from './Insights.helpers';
-import { RISK_LEVEL_DESCRIPTIONS, buildFinancialContextParams } from './Insights.helpers';
+import {
+    RISK_LEVEL_DESCRIPTIONS,
+    buildFinancialContextParams,
+    applyAiFailure,
+    parseInsightsJsonResponse,
+} from './Insights.helpers';
+import { AiErrorModal } from './AiErrorModal';
 import {
     RiskLevelInfoModal,
     AIInfoModal,
@@ -23,6 +29,8 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
     const {
         loading, setLoading,
         error, setError,
+        errorCode, setErrorCode,
+        clearAiError,
         summary, setSummary,
         result: structuredAnalysis, setResult: setStructuredAnalysis,
         copied, handleCopy,
@@ -76,7 +84,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
 
             if (!cache?.overview && !summary) {
                 setLoading(true);
-                setError(null);
+                clearAiError();
                 try {
                     const category = client.risk_profile || 'Level 2';
                     const description = RISK_LEVEL_DESCRIPTIONS[category] || RISK_LEVEL_DESCRIPTIONS['Level 2'];
@@ -87,7 +95,11 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                     });
 
                     const params = buildFinancialContextParams(client, dateRange);
-                    if (!params) return;
+                    if (!params) {
+                        setErrorCode(null);
+                        setError('Not enough client data to run analysis for this period. Try adjusting the date range or ensure plans and cashflow exist.');
+                        return;
+                    }
 
                     const stream = generateRiskSummary(params);
                     let fullText = '';
@@ -95,17 +107,23 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                         fullText += chunk;
                     }
 
+                    if (!fullText.trim()) {
+                        setErrorCode(null);
+                        setError('The AI returned an empty response. Please try again.');
+                        return;
+                    }
+
                     try {
                         const parsed = JSON.parse(fullText);
                         const exSummary = parsed["Executive Summary"] || fullText;
                         setSummary(exSummary);
                         if (onCacheUpdate) onCacheUpdate({ overview: exSummary, generatedPeriod: dateRange });
-                    } catch (parseErr) {
+                    } catch {
                         setSummary(fullText);
                         if (onCacheUpdate) onCacheUpdate({ overview: fullText, generatedPeriod: dateRange });
                     }
-                } catch (err: any) {
-                    setError(err.message === 'Load failed' || err.message === 'Failed to fetch' ? 'AI Service unreachable.' : 'Failed to load summary.');
+                } catch (err: unknown) {
+                    applyAiFailure(err, setError, setErrorCode, 'Failed to load summary.');
                 } finally {
                     setLoading(false);
                 }
@@ -122,20 +140,29 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
 
         const generateFullAnalysis = async () => {
             setLoading(true);
-            setError(null);
+            clearAiError();
             try {
                 const params = buildFinancialContextParams(client, dateRange);
-                if (!params) return;
+                if (!params) {
+                    setErrorCode(null);
+                    setError('Not enough client data to run analysis for this period. Try adjusting the date range or ensure plans and cashflow exist.');
+                    return;
+                }
                 const stream = generateRiskAnalysis(params);
                 let fullText = '';
                 for await (const chunk of stream) {
                     fullText += chunk;
                 }
-                const parsed = JSON.parse(fullText);
-                setStructuredAnalysis(parsed);
-                if (onCacheUpdate) onCacheUpdate({ focused: parsed, generatedPeriod: dateRange });
-            } catch (err: any) {
-                setError('Failed to generate full risk analysis.');
+                const parsed = parseInsightsJsonResponse(fullText);
+                if (!parsed.ok) {
+                    setErrorCode(null);
+                    setError(parsed.message);
+                    return;
+                }
+                setStructuredAnalysis(parsed.value);
+                if (onCacheUpdate) onCacheUpdate({ focused: parsed.value, generatedPeriod: dateRange });
+            } catch (err: unknown) {
+                applyAiFailure(err, setError, setErrorCode, 'Failed to generate full risk analysis.');
             } finally {
                 setLoading(false);
             }
@@ -234,16 +261,6 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                         <InlineCopyButton onClick={onCopyClicked} isCopied={copied} visible={riskOutputHovered} />
                     )}
                     <div className="ai-analysis-scroll-area">
-                        {error && (
-                            <div className="error-text">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                </svg>
-                                <span>{error}</span>
-                            </div>
-                        )}
                         {mode === 'focused' && (
                             <div className="structured-analysis">
                                 {summary && (
@@ -428,6 +445,12 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                 submitted={feedbackSubmitted}
                 onSubmit={handleFeedbackSubmitLocal}
                 error={feedbackError}
+            />
+            <AiErrorModal
+                open={!!error}
+                onClose={clearAiError}
+                message={error}
+                code={errorCode}
             />
         </>
     );

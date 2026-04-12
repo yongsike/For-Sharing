@@ -13,4 +13,9 @@ export const env = {
 
   supabaseUrl: required('SUPABASE_URL'),
   supabaseAnonKey: required('SUPABASE_ANON_KEY'),
+  /**
+   * Legacy HS256 only (Dashboard → Legacy JWT secret). New “JWT Signing Keys” (ECC) tokens
+   * are verified via JWKS at …/auth/v1/.well-known/jwks.json — no secret needed for those.
+   */
+  supabaseJwtSecret: process.env.SUPABASE_JWT_SECRET || '',
 }

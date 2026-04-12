@@ -10,6 +10,7 @@ import {
   InvestmentForm
 } from '../ClientForm/ClientFormSections';
 import { MANDATORY_CLIENT_FIELDS } from '../ClientForm/ClientFormComponents';
+import { AiErrorModal } from '../Dashboard/Insights/AiErrorModal';
 
 interface AddClientPageProps {
   onSuccess?: (newClientId?: string) => void;
@@ -18,6 +19,7 @@ interface AddClientPageProps {
 export const AddClientPage: React.FC<AddClientPageProps> = ({ onSuccess }) => {
   const {
     fileInputRef, dragOver, file, step, setStep, error,
+    errorCode, clearAiError,
     extracted, existingClient, isNewClient,
     errorFields, activeTab, setActiveTab,
     handleFile, handleDrop, handleAnalyse, handleApply,
@@ -107,17 +109,6 @@ export const AddClientPage: React.FC<AddClientPageProps> = ({ onSuccess }) => {
                 <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
                   <div style={{ display: 'inline-block', width: '24px', height: '24px', border: '2.5px solid var(--border, #eee)', borderTopColor: 'var(--primary, #c5b358)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '0.75rem' }} />
                   <p style={{ margin: 0, color: 'var(--primary, #c5b358)', fontWeight: 600, fontSize: 'var(--text-sm)' }}>Analyzing contents...</p>
-                </div>
-              )}
-
-              {error && step === 'upload' && !error.includes('Mandatory fields') && (
-                <div className="standard-error-box" style={{ margin: '0 auto 1.5rem', justifyContent: 'center', width: 'fit-content' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                  <span>{error}</span>
                 </div>
               )}
 
@@ -266,17 +257,6 @@ export const AddClientPage: React.FC<AddClientPageProps> = ({ onSuccess }) => {
                       />
                     )}
 
-                    {error && (
-                      <div className="error-text">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="12" y1="8" x2="12" y2="12"></line>
-                          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        <span>{error}</span>
-                      </div>
-                    )}
-
                     <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
                       <Button variant="outline" onClick={handleApply} style={{ minWidth: '200px' }}>Add Client Profile</Button>
                     </div>
@@ -288,6 +268,7 @@ export const AddClientPage: React.FC<AddClientPageProps> = ({ onSuccess }) => {
         )}
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <AiErrorModal open={!!error} onClose={clearAiError} message={error} code={errorCode} />
     </div>
   );
 };

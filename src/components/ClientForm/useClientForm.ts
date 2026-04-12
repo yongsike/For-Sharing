@@ -11,6 +11,7 @@ import {
   createEmptyExtractedData,
 } from '../../lib/pdfImport';
 import type { PdfExtractedData } from '../../lib/pdfImport';
+import { applyAiFailure } from '../../lib/aiErrors';
 import { CLIENT_FIELDS, MANDATORY_CLIENT_FIELDS } from './ClientFormComponents';
 
 export type Step = 'upload' | 'extracting' | 'review' | 'applying' | 'done';
@@ -22,6 +23,7 @@ export const useClientForm = (clientId?: string, onSuccess?: (newId?: string) =>
   const [file, setFile] = useState<File | null>(null);
   const [step, setStep] = useState<Step>('review');
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   const [extracted, setExtracted] = useState<PdfExtractedData | null>(null);
   const [existingClient, setExistingClient] = useState<any | null>(null);
@@ -84,13 +86,19 @@ export const useClientForm = (clientId?: string, onSuccess?: (newId?: string) =>
     return () => clearTimeout(timer);
   }, [extracted?.client.id_no, clientId]);
 
+  const clearAiError = useCallback(() => {
+    setError(null);
+    setErrorCode(null);
+  }, []);
+
   const handleFile = (f: File) => {
     if (f.type !== 'application/pdf') {
+      setErrorCode(null);
       setError('Please upload a PDF file.');
       return;
     }
     setFile(f);
-    setError(null);
+    clearAiError();
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -103,7 +111,7 @@ export const useClientForm = (clientId?: string, onSuccess?: (newId?: string) =>
   const handleAnalyse = async () => {
     if (!file) return;
     setStep('extracting');
-    setError(null);
+    clearAiError();
     try {
       const rawData = await parsePdfViaBackend(file);
       const data = normalizeExtractedData(rawData);
@@ -146,8 +154,13 @@ export const useClientForm = (clientId?: string, onSuccess?: (newId?: string) =>
         setExistingClient(null);
       }
       setStep('review');
-    } catch (err: any) {
-      setError(err.message || 'Failed to extract PDF data. Is the AI backend running?');
+    } catch (err: unknown) {
+      applyAiFailure(
+        err,
+        setError,
+        setErrorCode,
+        'Failed to extract PDF data. Is the AI backend running?'
+      );
       setStep('upload');
     }
   };
@@ -155,7 +168,7 @@ export const useClientForm = (clientId?: string, onSuccess?: (newId?: string) =>
   const handleApply = async () => {
     if (!extracted) return;
     setStep('applying');
-    setError(null);
+    clearAiError();
     try {
       const selectedFields = new Set<string>();
       if (includeClient) includedClientFields.forEach(f => selectedFields.add(f));
@@ -235,8 +248,9 @@ export const useClientForm = (clientId?: string, onSuccess?: (newId?: string) =>
         onSuccess?.(newId);
         onClose?.();
       }, 3000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to apply changes.');
+    } catch (err: unknown) {
+      setErrorCode(null);
+      setError(err instanceof Error ? err.message || 'Failed to apply changes.' : 'Failed to apply changes.');
       setStep('review');
     }
   };
@@ -365,6 +379,7 @@ export const useClientForm = (clientId?: string, onSuccess?: (newId?: string) =>
 
   return {
     fileInputRef, dragOver, setDragOver, file, setFile, step, setStep, error, setError,
+    errorCode, clearAiError,
     extracted, setExtracted, existingClient, setExistingClient, isNewClient, setIsNewClient,
     includeClient, includedClientFields, setIncludedClientFields, includeFamily, setIncludeFamily,
     includeCashflow, setIncludeCashflow, includeInsurance, setIncludeInsurance, includeInvestments, setIncludeInvestments,

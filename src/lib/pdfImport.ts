@@ -144,12 +144,118 @@ export async function matchClientByIdNo(idNo: string) {
   return data;
 }
 
+/** OCR sometimes emits `null` or non-objects inside arrays — `(null)[field]` crashes React on tab switch. */
+function sanitizeFamilyEntry(entry: unknown): PdfExtractedData['family'][number] {
+  const base: PdfExtractedData['family'][number] = {
+    family_member_name: '',
+    relationship: '',
+    gender: 'Male',
+    date_of_birth: null,
+    age: null,
+    monthly_upkeep: null,
+    support_until_age: null,
+    years_to_support: null,
+  };
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return { ...base };
+  return { ...base, ...(entry as Record<string, unknown>) } as PdfExtractedData['family'][number];
+}
+
+function sanitizeInsuranceEntry(entry: unknown): PdfExtractedData['insurance_plans'][number] {
+  const base: PdfExtractedData['insurance_plans'][number] = {
+    policy_name: '',
+    policy_type: null,
+    life_assured: null,
+    sum_assured: null,
+    premium_amount: null,
+    payment_frequency: null,
+    payment_term: null,
+    benefit_type: null,
+    start_date: null,
+    expiry_date: null,
+    status: 'Pending',
+  };
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return { ...base };
+  return { ...base, ...(entry as Record<string, unknown>) } as PdfExtractedData['insurance_plans'][number];
+}
+
+function sanitizeInvestmentEntry(entry: unknown): PdfExtractedData['investments'][number] {
+  const base: PdfExtractedData['investments'][number] = {
+    policy_name: '',
+    policy_type: null,
+    start_date: null,
+    status: 'Pending',
+  };
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return { ...base };
+  return { ...base, ...(entry as Record<string, unknown>) } as PdfExtractedData['investments'][number];
+}
+
+/** OCR often returns "English, Malay" or a single string; MultiPillSelect requires string[]. */
+function coerceLanguageList(val: unknown): string[] {
+  if (Array.isArray(val)) {
+    return val
+      .map(v => (v == null ? '' : String(v).trim()))
+      .filter(Boolean);
+  }
+  if (val == null || val === '') return [];
+  if (typeof val === 'string') {
+    return val
+      .split(/[,;]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+/**
+ * Merge OCR payload with empty defaults so UI never receives missing `client` / arrays
+ * (Gemini occasionally omits keys → render crash / blank screen on `.client` / `.map`).
+ */
+function coerceExtractedDataShape(data: PdfExtractedData | null | undefined): PdfExtractedData {
+  const empty = createEmptyExtractedData();
+  let raw: Record<string, unknown>;
+  try {
+    raw = data && typeof data === 'object' ? (JSON.parse(JSON.stringify(data)) as Record<string, unknown>) : {};
+  } catch {
+    raw = {};
+  }
+  const clientIn = raw.client && typeof raw.client === 'object' && !Array.isArray(raw.client)
+    ? (raw.client as PdfExtractedData['client'])
+    : {};
+  const cashIn = raw.cashflow;
+  let cashflow: PdfExtractedData['cashflow'];
+  if (cashIn === null) {
+    // Review UI indexes fields on cashflow; null crashes Cashflow tab. Use zeros like manual entry.
+    cashflow = empty.cashflow ?? null;
+  } else if (cashIn && typeof cashIn === 'object' && !Array.isArray(cashIn)) {
+    cashflow = { ...empty.cashflow, ...cashIn } as PdfExtractedData['cashflow'];
+  } else {
+    cashflow = empty.cashflow ?? null;
+  }
+  const mergedClient: PdfExtractedData['client'] = { ...empty.client, ...clientIn };
+  mergedClient.languages_spoken = coerceLanguageList(mergedClient.languages_spoken);
+  mergedClient.languages_written = coerceLanguageList(mergedClient.languages_written);
+
+  return {
+    client: mergedClient,
+    family: Array.isArray(raw.family)
+      ? (raw.family as unknown[]).map(sanitizeFamilyEntry)
+      : [],
+    cashflow,
+    insurance_plans: Array.isArray(raw.insurance_plans)
+      ? (raw.insurance_plans as unknown[]).map(sanitizeInsuranceEntry)
+      : [],
+    investments: Array.isArray(raw.investments)
+      ? (raw.investments as unknown[]).map(sanitizeInvestmentEntry)
+      : [],
+  };
+}
+
 /**
  * Normalizes extracted data to match strict system constraints (ENUMS).
  * This maps common variations (e.g., "Full Time" to "Full-time") found by AI.
  */
-export function normalizeExtractedData(data: PdfExtractedData): PdfExtractedData {
-  const d = JSON.parse(JSON.stringify(data)); // deep clone
+export function normalizeExtractedData(data: PdfExtractedData | null | undefined): PdfExtractedData {
+  const d = coerceExtractedDataShape(data);
 
   const normalize = (val: any, target: string[], strict = true) => {
     let sVal = val;
@@ -190,6 +296,7 @@ export function normalizeExtractedData(data: PdfExtractedData): PdfExtractedData
   // 2. Family Members
   if (d.family) {
     d.family.forEach((m: any) => {
+      if (!m || typeof m !== 'object') return;
       if (m.gender !== undefined) m.gender = normalize(m.gender, ['Male', 'Female']);
       if (m.relationship !== undefined) m.relationship = normalize(m.relationship, ['Spouse', 'Child', 'Parent']);
       if (m.monthly_upkeep != null) m.monthly_upkeep = Math.max(0, Number(m.monthly_upkeep || 0));
@@ -200,11 +307,12 @@ export function normalizeExtractedData(data: PdfExtractedData): PdfExtractedData
 
   // 3. Cashflow
   if (d.cashflow) {
-    Object.keys(d.cashflow).forEach(k => {
-      if (k !== 'as_of_date' && typeof d.cashflow[k] === 'number') {
-        d.cashflow[k] = Math.max(0, d.cashflow[k]);
-      } else if (k !== 'as_of_date' && !isNaN(Number(d.cashflow[k]))) {
-        d.cashflow[k] = Math.max(0, Number(d.cashflow[k]));
+    const cf = d.cashflow as Record<string, unknown>;
+    Object.keys(cf).forEach(k => {
+      if (k !== 'as_of_date' && typeof cf[k] === 'number') {
+        cf[k] = Math.max(0, cf[k] as number);
+      } else if (k !== 'as_of_date' && !isNaN(Number(cf[k]))) {
+        cf[k] = Math.max(0, Number(cf[k]));
       }
     });
   }
@@ -212,6 +320,7 @@ export function normalizeExtractedData(data: PdfExtractedData): PdfExtractedData
   // 4. Insurance Plans
   if (d.insurance_plans) {
     d.insurance_plans.forEach((p: any) => {
+      if (!p || typeof p !== 'object') return;
       if (p.policy_type !== undefined) p.policy_type = normalize(p.policy_type, ['Life Insurance', 'Health Insurance', 'General Insurance']);
       if (p.payment_frequency !== undefined) p.payment_frequency = normalize(p.payment_frequency, ['Monthly', 'Quarterly', 'Semi-Annual', 'Annual']);
 
@@ -226,6 +335,7 @@ export function normalizeExtractedData(data: PdfExtractedData): PdfExtractedData
   // 5. Investments
   if (d.investments) {
     d.investments.forEach((inv: any) => {
+      if (!inv || typeof inv !== 'object') return;
       // DB check constraint: 'Equity', 'Fixed Income', 'Cash'
       if (inv.policy_type !== undefined) inv.policy_type = normalize(inv.policy_type, ['Equity', 'Fixed Income', 'Cash']);
 
@@ -493,6 +603,13 @@ export async function parsePdfViaBackend(
     body: formData,
   });
 
-  const json = await res.json();
+  const json = await res.json() as { success?: boolean; data?: unknown; error?: string };
+  if (json?.data == null || typeof json.data !== 'object') {
+    throw new Error(
+      typeof json?.error === 'string' && json.error
+        ? json.error
+        : 'OCR did not return usable data. Please try again.'
+    );
+  }
   return json.data as PdfExtractedData;
 }
