@@ -100,7 +100,12 @@ export const FamilyForm: React.FC<{
 }> = ({ extracted, includeFamily, setIncludeFamily, handleFamilyMemberChange, removeFamilyMember, addFamilyMember, disabled }) => (
   <Section title="Family Members" enabled={includeFamily} onToggle={() => setIncludeFamily(!includeFamily)}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {extracted.family.map((member, idx) => (
+      {(extracted.family ?? []).map((member, idx) => {
+        const m =
+          member && typeof member === 'object' && !Array.isArray(member)
+            ? (member as Record<string, unknown>)
+            : {};
+        return (
         <div key={idx} style={{ padding: '1rem', background: 'rgba(0,0,0,0.01)', borderRadius: '8px', border: '1px solid var(--border)', position: 'relative' }}>
           <button
             onClick={() => removeFamilyMember(idx)}
@@ -114,7 +119,7 @@ export const FamilyForm: React.FC<{
                 key={f}
                 fieldKey={f}
                 label={formatLabel(f)}
-                val={(member as any)[f]}
+                val={m[f]}
                 included={includeFamily}
                 onChange={(val) => handleFamilyMemberChange(idx, f, val)}
                 disabled={disabled || !includeFamily}
@@ -122,7 +127,8 @@ export const FamilyForm: React.FC<{
             ))}
           </div>
         </div>
-      ))}
+        );
+      })}
       <Button variant="outline" size="small" onClick={addFamilyMember} style={{ alignSelf: 'flex-start' }} disabled={disabled || !includeFamily}>+ Add Member</Button>
     </div>
   </Section>
@@ -134,7 +140,9 @@ export const CashflowForm: React.FC<{
   setIncludeCashflow: (v: boolean) => void;
   handleCashflowChange: (field: any, val: any) => void;
   disabled?: boolean;
-}> = ({ extracted, includeCashflow, setIncludeCashflow, handleCashflowChange, disabled }) => (
+}> = ({ extracted, includeCashflow, setIncludeCashflow, handleCashflowChange, disabled }) => {
+  const cashflowRow = extracted.cashflow ?? ({} as NonNullable<PdfExtractedData['cashflow']>);
+  return (
   <Section title="Cashflow" enabled={includeCashflow} onToggle={() => setIncludeCashflow(!includeCashflow)}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div>
@@ -145,7 +153,7 @@ export const CashflowForm: React.FC<{
               key={f}
               fieldKey={f}
               label={formatLabel(f)}
-              val={(extracted.cashflow as any)[f]}
+              val={(cashflowRow as any)[f]}
               included={includeCashflow}
               onChange={(val) => handleCashflowChange(f, val)}
               disabled={disabled || !includeCashflow}
@@ -161,7 +169,7 @@ export const CashflowForm: React.FC<{
               key={f}
               fieldKey={f}
               label={formatLabel(f)}
-              val={(extracted.cashflow as any)[f]}
+              val={(cashflowRow as any)[f]}
               included={includeCashflow}
               onChange={(val) => handleCashflowChange(f, val)}
               disabled={disabled || !includeCashflow}
@@ -171,7 +179,8 @@ export const CashflowForm: React.FC<{
       </div>
     </div>
   </Section>
-);
+  );
+};
 
 export const InsuranceForm: React.FC<{
   extracted: PdfExtractedData;

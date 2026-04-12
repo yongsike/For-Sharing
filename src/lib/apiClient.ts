@@ -2,6 +2,18 @@ import { supabase } from './supabaseClient';
 
 const backendUrl = (import.meta.env.VITE_AI_BACKEND_URL as string | undefined) || 'http://localhost:8080';
 
+/** Thrown on non-OK AI backend responses; includes optional `code` from JSON (e.g. AI_OVERLOADED). */
+export class ApiError extends Error {
+  readonly code?: string;
+  readonly httpStatus?: number;
+  constructor(message: string, opts?: { code?: string; httpStatus?: number }) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = opts?.code;
+    this.httpStatus = opts?.httpStatus;
+  }
+}
+
 async function getAuthToken() {
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token;
@@ -30,16 +42,29 @@ export async function apiClient(path: string, options: RequestInit = {}) {
   });
 
   if (!res.ok) {
-    // Attempt to extract error message from JSON or text
-    let errorMsg: string;
+    let errorMsg = '';
+    let code: string | undefined;
     try {
       const json = await res.clone().json();
-      errorMsg = json.error || json.message || json.fields ? JSON.stringify(json.fields) : '';
+      if (json && typeof json === 'object') {
+        const o = json as { error?: unknown; message?: unknown; code?: unknown; fields?: unknown };
+        if (typeof o.error === 'string') {
+          errorMsg = o.error;
+        } else if (typeof o.message === 'string') {
+          errorMsg = o.message;
+        } else if (o.fields != null) {
+          errorMsg = JSON.stringify(o.fields);
+        }
+        if (typeof o.code === 'string') {
+          code = o.code;
+        }
+      }
     } catch {
-      errorMsg = await res.clone().text().catch(() => '');
+      errorMsg = (await res.clone().text().catch(() => '')) || '';
     }
-    
-    throw new Error(errorMsg || `API backend error (${res.status})`);
+
+    const msg = (errorMsg || '').trim() || `API backend error (${res.status})`;
+    throw new ApiError(msg, { code, httpStatus: res.status });
   }
 
   return res;

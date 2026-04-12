@@ -210,3 +210,20 @@ export const handleButtonHover = (e: any, isHovering: boolean) => {
         e.currentTarget.style.transform = isHovering ? 'translateY(-2px)' : 'translateY(0)';
     }
 };
+
+export { formatInsightsError, applyAiFailure, titleForAiErrorCode } from '../../../lib/aiErrors';
+
+/** Parses model JSON; avoids throwing during render */
+export function parseInsightsJsonResponse(
+    fullText: string
+): { ok: true; value: unknown } | { ok: false; message: string } {
+    const t = fullText.trim();
+    if (!t) {
+        return { ok: false, message: 'The AI returned an empty response. Please try again.' };
+    }
+    try {
+        return { ok: true, value: JSON.parse(t) };
+    } catch {
+        return { ok: false, message: 'The AI response was not valid JSON. Please try again.' };
+    }
+}

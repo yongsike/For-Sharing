@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { generateMeetingNotes, generateMeetingSummary } from '../../../lib/insightsAI';
 import { useAIAnalysis } from './useAIAnalysis';
 import type { InsightsProps } from './Insights.helpers';
-import { buildFinancialContextParams } from './Insights.helpers';
+import { buildFinancialContextParams, applyAiFailure, parseInsightsJsonResponse } from './Insights.helpers';
+import { AiErrorModal } from './AiErrorModal';
 import {
     AIInfoModal,
     AIFeedbackModal,
@@ -22,6 +23,8 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
     const {
         loading, setLoading,
         error, setError,
+        errorCode, setErrorCode,
+        clearAiError,
         summary: meetingNotesSummary, setSummary: setMeetingNotesSummary,
         result: meetingNotesResult, setResult: setMeetingNotesResult,
         copied: meetingNotesCopied, handleCopy,
@@ -57,7 +60,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
 
         const generateFullNotes = async () => {
             setLoading(true);
-            setError(null);
+            clearAiError();
             try {
                 const contextParams = buildFinancialContextParams(client, dateRange);
                 if (!contextParams) throw new Error('Could not build financial context.');
@@ -65,11 +68,16 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                 const stream = generateMeetingNotes(params);
                 let fullText = '';
                 for await (const chunk of stream) fullText += chunk;
-                const parsed = JSON.parse(fullText);
-                setMeetingNotesResult(parsed);
-                if (onCacheUpdate) onCacheUpdate({ meetingNotes: parsed });
-            } catch (err: any) {
-                setError('Failed to generate full meeting notes.');
+                const parsed = parseInsightsJsonResponse(fullText);
+                if (!parsed.ok) {
+                    setErrorCode(null);
+                    setError(parsed.message);
+                    return;
+                }
+                setMeetingNotesResult(parsed.value);
+                if (onCacheUpdate) onCacheUpdate({ meetingNotes: parsed.value });
+            } catch (err: unknown) {
+                applyAiFailure(err, setError, setErrorCode, 'Failed to generate full meeting notes.');
             } finally {
                 setLoading(false);
             }
@@ -82,7 +90,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
         if (!transcript.trim() || !client) return;
         setLoading(true);
         setMeetingTab('generated');
-        setError(null);
+        clearAiError();
 
         try {
             const contextParams = buildFinancialContextParams(client, dateRange);
@@ -91,14 +99,26 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
             const stream = generateMeetingSummary(params);
             let fullText = '';
             for await (const chunk of stream) fullText += chunk;
-            const parsed = JSON.parse(fullText);
-            const summaryText = parsed["Meeting Summary"] || fullText;
-            setMeetingNotesSummary(summaryText);
-            if (onCacheUpdate) {
-                onCacheUpdate({ meetingNotesSummary: summaryText, meetingNotesTranscript: transcript.trim() });
+            if (!fullText.trim()) {
+                setErrorCode(null);
+                setError('The AI returned an empty response. Please try again.');
+                return;
             }
-        } catch (err: any) {
-            setError(err.message === 'Load failed' || err.message === 'Failed to fetch' ? 'AI Service unreachable.' : 'Failed to generate meeting notes.');
+            try {
+                const parsed = JSON.parse(fullText);
+                const summaryText = parsed["Meeting Summary"] || fullText;
+                setMeetingNotesSummary(summaryText);
+                if (onCacheUpdate) {
+                    onCacheUpdate({ meetingNotesSummary: summaryText, meetingNotesTranscript: transcript.trim() });
+                }
+            } catch {
+                setMeetingNotesSummary(fullText);
+                if (onCacheUpdate) {
+                    onCacheUpdate({ meetingNotesSummary: fullText, meetingNotesTranscript: transcript.trim() });
+                }
+            }
+        } catch (err: unknown) {
+            applyAiFailure(err, setError, setErrorCode, 'Failed to generate meeting notes.');
         } finally {
             setLoading(false);
         }
@@ -203,16 +223,6 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                                 <InlineCopyButton onClick={onCopyClicked} isCopied={meetingNotesCopied} visible={meetingOutputHovered} />
                             )}
                             <div className="ai-analysis-scroll-area">
-                                {error && (
-                                    <div className="error-text">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                        </svg>
-                                        <span>{error}</span>
-                                    </div>
-                                )}
                                 {!meetingNotesSummary && !loading && !meetingNotesResult && (
                                     <div style={{
                                         height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -357,6 +367,12 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                 submitted={feedbackSubmitted}
                 onSubmit={handleFeedbackSubmitLocal}
                 error={feedbackError}
+            />
+            <AiErrorModal
+                open={!!error}
+                onClose={clearAiError}
+                message={error}
+                code={errorCode}
             />
         </>
     );

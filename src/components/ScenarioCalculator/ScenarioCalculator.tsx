@@ -3,6 +3,8 @@ import { runScenario, runContributionScenario } from '../../lib/scenarioCalculat
 import type { ScenarioResult, ContributionResult } from '../../lib/scenarioCalculator';
 import './ScenarioCalculator.css';
 import { Button } from '../UI/Button';
+import { applyAiFailure } from '../../lib/aiErrors';
+import { AiErrorModal } from '../Dashboard/Insights/AiErrorModal';
 
 type Frequency = 'monthly' | 'quarterly' | 'annually';
 type Mode = 'future_value' | 'contribution';
@@ -100,6 +102,7 @@ const ScenarioCalculator: React.FC = () => {
   const [touched, setTouched] = useState<Partial<Record<keyof FormValues, boolean>>>({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [apiErrorCode, setApiErrorCode] = useState<string | null>(null);
   
   const [fvResult, setFvResult] = useState<ScenarioResult | null>(null);
   const [contribResult, setContribResult] = useState<ContributionResult | null>(null);
@@ -130,6 +133,7 @@ const ScenarioCalculator: React.FC = () => {
       setErrors({});
       setTouched({});
       setApiError(null);
+      setApiErrorCode(null);
       setFvResult(null);
       setContribResult(null);
     }
@@ -159,6 +163,7 @@ const ScenarioCalculator: React.FC = () => {
 
     setLoading(true);
     setApiError(null);
+    setApiErrorCode(null);
     try {
       if (mode === 'future_value') {
         const contrib = parseFloat(form.additionalContribution) || 0;
@@ -183,8 +188,13 @@ const ScenarioCalculator: React.FC = () => {
         setContribResult(data);
         setFvResult(null);
       }
-    } catch (err: any) {
-      setApiError(err.message || 'Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      applyAiFailure(
+        err,
+        setApiError,
+        setApiErrorCode,
+        'Something went wrong. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -195,8 +205,14 @@ const ScenarioCalculator: React.FC = () => {
     setErrors({});
     setTouched({});
     setApiError(null);
+    setApiErrorCode(null);
     setFvResult(null);
     setContribResult(null);
+  };
+
+  const clearApiError = () => {
+    setApiError(null);
+    setApiErrorCode(null);
   };
 
   const activeResult = mode === 'future_value' ? fvResult : contribResult;
@@ -443,18 +459,6 @@ const ScenarioCalculator: React.FC = () => {
               {errors.annualGrowthRate && <p className="sc-error-msg">{errors.annualGrowthRate}</p>}
             </div>
 
-            {/* API error */}
-            {apiError && (
-              <div className="standard-error-box">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                {apiError}
-              </div>
-            )}
-
             {/* Actions */}
             <div className="sc-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
               <Button 
@@ -614,6 +618,12 @@ const ScenarioCalculator: React.FC = () => {
           )}
         </div>
       </div>
+      <AiErrorModal
+        open={!!apiError}
+        onClose={clearApiError}
+        message={apiError}
+        code={apiErrorCode}
+      />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from '../middleware/requireSupabaseAuth.js'
 import { createSupabaseClient, supabase } from '../lib/supabase.js'
 import { generateRiskAnalysis, generateRiskSummary } from '../services/geminiRisk.js'
 import { generateMeetingNotes, generateMeetingSummary } from '../services/geminiMeetingNotes.js'
+import { sendGeminiError } from '../utils/geminiHttpError.js'
 
 export const insightsRouter = Router()
 
@@ -12,7 +13,7 @@ insightsRouter.post('/risk-summary', requireSupabaseAuth, async (req, res) => {
     const json = await generateRiskSummary(req.body)
     res.json(json)
   } catch (e) {
-    res.status(500).json({ error: e instanceof Error ? e.message : 'Unknown error' })
+    return sendGeminiError(res, e, '[insights/risk-summary]')
   }
 })
 
@@ -22,7 +23,7 @@ insightsRouter.post('/risk-analysis', requireSupabaseAuth, async (req, res) => {
     const json = await generateRiskAnalysis(req.body)
     res.json(json)
   } catch (e) {
-    res.status(500).json({ error: e instanceof Error ? e.message : 'Unknown error' })
+    return sendGeminiError(res, e, '[insights/risk-analysis]')
   }
 })
 
@@ -32,7 +33,7 @@ insightsRouter.post('/meeting-notes', requireSupabaseAuth, async (req, res) => {
     const json = await generateMeetingNotes(req.body)
     res.json(json)
   } catch (e) {
-    res.status(500).json({ error: e instanceof Error ? e.message : 'Unknown error' })
+    return sendGeminiError(res, e, '[insights/meeting-notes]')
   }
 })
 
@@ -42,7 +43,7 @@ insightsRouter.post('/meeting-summary', requireSupabaseAuth, async (req, res) =>
     const json = await generateMeetingSummary(req.body)
     res.json(json)
   } catch (e) {
-    res.status(500).json({ error: e instanceof Error ? e.message : 'Unknown error' })
+    return sendGeminiError(res, e, '[insights/meeting-summary]')
   }
 })
 
@@ -73,8 +74,7 @@ insightsRouter.post('/feedback', requireSupabaseAuth, async (req, res) => {
   } catch (e) {
     console.error('Feedback Error:', e)
     res.status(500).json({
-      error: e instanceof Error ? e.message : (e.message || 'Unknown error'),
-      details: e
+      error: e instanceof Error ? e.message : 'Unknown error',
     })
   }
 })
