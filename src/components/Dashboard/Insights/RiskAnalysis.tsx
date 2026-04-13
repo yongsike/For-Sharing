@@ -86,26 +86,71 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
     const [riskOutputHovered, setRiskOutputHovered] = useState(false);
     const [hasInitiated, setHasInitiated] = useState(false);
     const [forceRegenerate, setForceRegenerate] = useState(false);
-    const [shouldGenerate, setShouldGenerate] = useState(false);
+    const [shouldGenerateSummary, setShouldGenerateSummary] = useState(false);
+    const [shouldGenerateFull, setShouldGenerateFull] = useState(false);
+
+    // Keep the risk level header visible even when we only load cached AI results.
+    useEffect(() => {
+        if (!client) {
+            setClientInfo(null);
+            return;
+        }
+        const category = client.risk_profile || 'Level 2';
+        const description = RISK_LEVEL_DESCRIPTIONS[category] || RISK_LEVEL_DESCRIPTIONS['Level 2'];
+        setClientInfo({
+            category,
+            description,
+            date: client.last_updated || new Date().toISOString(),
+        });
+    }, [client?.client_id, client?.risk_profile, client?.last_updated]);
 
     useEffect(() => {
         const isCacheEmpty = !cache || Object.keys(cache).length === 0;
         setHasInitiated(!isCacheEmpty);
     }, [client?.client_id, dateRange?.startDate, dateRange?.endDate]);
 
-    const handleRegenerateNow = (e?: React.MouseEvent) => {
+    const handleRegenerateSummary = (e?: React.MouseEvent) => {
         e?.stopPropagation();
         e?.preventDefault();
         setForceRegenerate(true);
-        setShouldGenerate(true);
-        reset();
+        setShouldGenerateSummary(true);
+        // Only reset summary-related state/cache (keep comprehensive if already generated).
+        setSummary(null as any);
+        setError(null);
+        setErrorCode(null);
         if (onCacheUpdate) {
             onCacheUpdate({
                 overview: undefined,
+                generatedPeriod: undefined,
+            });
+        }
+        setHasInitiated(true);
+    };
+
+    const handleRegenerateFull = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        e?.preventDefault();
+        setForceRegenerate(true);
+        setShouldGenerateFull(true);
+        // Only reset comprehensive-related state/cache (keep summary if present).
+        setStructuredAnalysis(null as any);
+        setError(null);
+        setErrorCode(null);
+        if (onCacheUpdate) {
+            onCacheUpdate({
                 focused: undefined,
                 generatedPeriod: undefined,
             });
         }
+        setHasInitiated(true);
+    };
+
+    const handleGenerateComprehensive = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        e?.preventDefault();
+        // If summary is missing, generate that first so focused view isn't empty.
+        if (!summary) setShouldGenerateSummary(true);
+        setShouldGenerateFull(true);
         setHasInitiated(true);
     };
 
@@ -146,7 +191,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                 }
 
                 // Full analysis cache (focused mode only)
-                if (mode === 'focused' && summary && !structuredAnalysis) {
+                if (mode === 'focused' && !structuredAnalysis) {
                     const { data: cached, error: cacheErr } = await supabase
                         .from('client_ai_analysis')
                         .select('content, created_at')
@@ -187,7 +232,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
             if (cache?.focused) setStructuredAnalysis(cache.focused);
         }
 
-        if (!shouldGenerate) return;
+        if (!shouldGenerateSummary) return;
 
         const fetchSummary = async () => {
             if (cache?.overview) {
@@ -270,19 +315,19 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                     applyAiFailure(err, setError, setErrorCode, 'Failed to load summary.');
                 } finally {
                     setForceRegenerate(false);
-                    setShouldGenerate(false);
+                    setShouldGenerateSummary(false);
                     setLoading(false);
                 }
             }
         };
 
         fetchSummary();
-    }, [client, dateRange?.endDate, cache, shouldGenerate]);
+    }, [client, dateRange?.endDate, cache, shouldGenerateSummary]);
 
     useEffect(() => {
         if (mode !== 'focused') return;
         if (!client || !summary || structuredAnalysis || loading) return;
-        if (!shouldGenerate) return;
+        if (!shouldGenerateFull) return;
 
         const generateFullAnalysis = async () => {
             setLoading(true);
@@ -336,13 +381,13 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                 applyAiFailure(err, setError, setErrorCode, 'Failed to generate full risk analysis.');
             } finally {
                 setForceRegenerate(false);
-                setShouldGenerate(false);
+                setShouldGenerateFull(false);
                 setLoading(false);
             }
         };
 
         generateFullAnalysis();
-    }, [mode, summary, structuredAnalysis, client, shouldGenerate, loading]);
+    }, [mode, summary, structuredAnalysis, client, shouldGenerateFull, loading]);
 
     const onCopyClicked = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -555,7 +600,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                                 </svg>
                                 <p>Click below to analyse the client's risk alignment.</p>
                                 <Button
-                                    onClick={(e) => { e.stopPropagation(); setHasInitiated(true); setShouldGenerate(true); }}
+                                    onClick={(e) => { e.stopPropagation(); setHasInitiated(true); setShouldGenerateSummary(true); }}
                                     variant="outline"
                                     size={mode === 'focused' ? 'medium' : 'small'}
                                     style={{ marginTop: '0.5rem' }}
@@ -579,7 +624,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                             This analysis was generated for a different period ({new Date(cache.generatedPeriod.startDate).toLocaleDateString()} - {new Date(cache.generatedPeriod.endDate).toLocaleDateString()})
                         </span>
                         <Button
-                            onClick={handleRegenerateNow}
+                            onClick={handleRegenerateSummary}
                             variant="outline"
                             size={mode === 'focused' ? 'medium' : 'small'}
                             style={{
@@ -609,7 +654,7 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                         onFeedbackModalOpen={() => setIsFeedbackModalOpen(true)}
                         actionLabel={hasInitiated && !!summary ? 'Regenerate' : undefined}
                         actionDisabled={loading}
-                        onAction={() => handleRegenerateNow()}
+                        onAction={() => handleRegenerateSummary()}
                     />
                 )}
             </div>
@@ -619,9 +664,16 @@ export const RiskAnalysis: React.FC<InsightsProps> = ({
                     mode={mode}
                     onAIModalOpen={() => setIsAIModalOpen(true)}
                     onFeedbackModalOpen={() => setIsFeedbackModalOpen(true)}
-                    actionLabel={hasInitiated && (!!summary || !!structuredAnalysis) ? 'Regenerate' : undefined}
+                    actionLabel={
+                        hasInitiated && structuredAnalysis
+                            ? 'Regenerate'
+                            : (hasInitiated && summary && !structuredAnalysis ? 'Generate comprehensive' : undefined)
+                    }
                     actionDisabled={loading}
-                    onAction={() => handleRegenerateNow()}
+                    onAction={() => {
+                        if (structuredAnalysis) handleRegenerateFull();
+                        else handleGenerateComprehensive();
+                    }}
                 />
             )}
 
