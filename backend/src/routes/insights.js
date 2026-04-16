@@ -16,7 +16,24 @@ insightsRouter.post('/risk-summary', requireSupabaseAuth, async (req, res) => {
     try {
       const { client_id, start_date, end_date } = req.body || {}
       if (client_id) {
-        await createSupabaseClient(req.token)
+        const supabase = createSupabaseClient(req.token)
+
+        // Wipe old analysis for this period to prevent stale "comprehensive" cache leaking into UI
+        let deleteQuery = supabase
+          .from('client_ai_analysis')
+          .delete()
+          .eq('client_id', client_id)
+          .in('analysis_type', ['risk_summary_normal', 'risk_analysis_comprehensive'])
+
+        if (start_date) deleteQuery = deleteQuery.eq('start_date', start_date)
+        else deleteQuery = deleteQuery.is('start_date', null)
+
+        if (end_date) deleteQuery = deleteQuery.eq('end_date', end_date)
+        else deleteQuery = deleteQuery.is('end_date', null)
+
+        await deleteQuery
+
+        await supabase
           .from('client_ai_analysis')
           .insert([
             {
