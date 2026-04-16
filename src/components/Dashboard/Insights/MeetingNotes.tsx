@@ -40,6 +40,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
     const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
     const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState<boolean>(false);
     const [meetingOutputHovered, setMeetingOutputHovered] = useState(false);
+    const [shouldGenerateFull, setShouldGenerateFull] = useState(false);
 
     useEffect(() => {
         if (!client) return;
@@ -57,6 +58,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
     useEffect(() => {
         if (mode !== 'focused') return;
         if (!client || !meetingNotesSummary || meetingNotesResult || loading || !transcript.trim()) return;
+        if (!shouldGenerateFull) return;
 
         const generateFullNotes = async () => {
             setLoading(true);
@@ -79,12 +81,19 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
             } catch (err: unknown) {
                 applyAiFailure(err, setError, setErrorCode, 'Failed to generate full meeting notes.');
             } finally {
+                setShouldGenerateFull(false);
                 setLoading(false);
             }
         };
 
         generateFullNotes();
-    }, [mode, meetingNotesSummary, meetingNotesResult, client]);
+    }, [mode, meetingNotesSummary, meetingNotesResult, client, shouldGenerateFull, transcript, dateRange, clearAiError, setError, setErrorCode, setMeetingNotesResult, onCacheUpdate, loading]);
+
+    const handleGenerateComprehensive = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        e?.preventDefault();
+        setShouldGenerateFull(true);
+    };
 
     const handleMeetingNotesSubmit = async () => {
         if (!transcript.trim() || !client) return;
@@ -167,7 +176,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
             <div className="risk-indicator" style={{ flex: 1, gap: '1rem', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 {mode === 'focused' && loading && (
                     <p className="insights-run-hint">
-                        Stay on this view until loading finishes. Going back or switching tabs cancels this run (we don’t run AI in the background).
+                        Stay on this view until loading finishes. Going back or switching tabs will cancel this run.
                     </p>
                 )}
                 <div className="tabs-switcher" style={{ marginBottom: 0 }}>
@@ -260,6 +269,18 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                                                 {renderCleanList(meetingNotesSummary)}
                                             </div>
                                         )}
+                                        {meetingNotesSummary && !meetingNotesResult && !loading && (
+                                            <div style={{ display: 'flex', justifyContent: 'center', padding: '0.5rem 0 1rem' }}>
+                                                <Button
+                                                    onClick={handleGenerateComprehensive}
+                                                    variant="outline"
+                                                    size="medium"
+                                                    style={{ marginTop: '0.25rem' }}
+                                                >
+                                                    Generate comprehensive
+                                                </Button>
+                                            </div>
+                                        )}
                                         {loading && (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem 0' }}>
                                                 <div className="loading-shimmer">
@@ -344,7 +365,7 @@ export const MeetingNotes: React.FC<InsightsProps> = ({
                     mode={mode}
                     onAIModalOpen={() => setIsAIModalOpen(true)}
                     onFeedbackModalOpen={() => setIsFeedbackModalOpen(true)}
-                    actionLabel={(meetingNotesSummary || meetingNotesResult) ? 'New transcript' : undefined}
+                    actionLabel={meetingNotesSummary ? 'New transcript' : undefined}
                     actionDisabled={loading}
                     onAction={handleNewTranscript}
                 />
